@@ -147,3 +147,8 @@ nohup python3 app.py & tail -f nohup.out   #挂载运行app.py进程
 3. 避免频繁登录/登出操作，防止触发风控
 4. 定期更新代码以获取最新功能和修复
 
+## 交流群
+
+欢迎进入交流群进行相互讨论学习
+
+https://github.com/Lingyuzhou111/dow-ipad-859/blob/main/images/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20250624134616.jpg?raw=true
