@@ -1,69 +1,12 @@
 # 微信机器人项目 - 基于859协议的智能对话系统
 
-## 项目概述
+## 一、项目概述
 
 本项目是一个基于859版iPad协议的微信机器人项目，集成了dify-on-wechat聊天机器人框架，实现智能对话功能。项目支持在Windows系统本地部署，提供完整的微信消息收发、AI对话、图片识别等功能。
 
-## 最新更新 (2025-06-23)
+### 最新更新 (2025-06-23)
 
-## 快速开始
-
-### 1. 下载源码
-
-```bash
-# 确保Python 3.8+环境，建议使用Python 3.11以上版本
-git clone https://github.com/Lingyuzhou111/dow-ipad-859.git
-cd dow-ipad-859
-```
-
-### 2. 安装依赖
-```bash
-pip install -r requirements.txt
-pip install -r requirements-optional.txt
-```
-
-### 3. 配置机器人
-编辑 `config.json`:
-```json
-{
-  "dify_api_base": "https://api.dify.ai/v1",
-  "dify_api_key": "your-dify-api-key",
-  "channel_type": "wx859",
-  "wx859_api_host": "127.0.0.1",
-  "wx859_api_port": 8059
-}
-```
-
-### 4. 启动机器人
-
-#### Windows 用户
-```bash
-1. 进入`lib\wx859\859\redis`目录，双击`redis-server.exe`启动redis服务
-2. 进入`lib\wx859\859\win`目录，双击`wxapi_win64_v1_0_5.exe`启动 WX859 协议服务
-3. 进入项目根目录，右键`在终端中打开`，执行`python app.py`启动主程序
-4. 保活机制：以上三个窗口均需保持开启
-```
-#### Linux/macOS 用户
-```bash
-1. 进入项目根目录：`/root/dow-ipad-859`
-2. 赋予脚本执行权限：`chmod +x scripts/wx859_start.sh`
-3. 执行 `./scripts/wx859_start.sh` 脚本启动 WX859 协议服务
-4. 等待服务完全启动后使用 `python3 app.py` 启动主程序
-
-5.保活机制(不懂原理的可以问问deepseek)：
-tmux kill-session -t dify                  # 杀掉tmux旧进程      
-tmux new -s dify                           # 启动tmux新进程                 
-./scripts/wx859_start.sh                   # 后台运行脚本           
-tmux attach -t dify                        # 重连时恢复(正常无需这一步)                 
-pkill -f "python3 app.py"                  # 杀掉app.py旧进程     
-nohup python3 app.py & tail -f nohup.out   #挂载运行app.py进程 
-```
-### 5. 扫码登录
-- 程序第一次启动后会显示二维码
-- 使用微信扫码登录
-- 登录成功后自动开始消息监听
-
-## 功能特性
+### 功能特性
 
 - **多种协议支持**: 支持849(iPad)
 - **高稳定性**: 基于成熟的WX849协议，连接稳定，功能丰富
@@ -71,9 +14,7 @@ nohup python3 app.py & tail -f nohup.out   #挂载运行app.py进程
 - **智能对话**: 对接Dify API，提供智能对话服务
 - **灵活配置**: 支持白名单、黑名单等多样化配置
 
-## 配置说明
-
-### 核心配置项
+### 核心配置说明
 ```json
 {
   "channel_type": "wx859",
@@ -131,7 +72,64 @@ nohup python3 app.py & tail -f nohup.out   #挂载运行app.py进程
   "zhipuai_model": "glm-4-flash-250414"  
 }
 ```
-## 常见问题
+## 二、快速开始
+
+### 1. 下载源码
+
+```bash
+# 确保Python 3.8+环境，建议使用Python 3.11以上版本
+git clone https://github.com/Lingyuzhou111/dow-ipad-859.git
+cd dow-ipad-859
+```
+
+### 2. 安装依赖
+```bash
+pip install -r requirements.txt
+pip install -r requirements-optional.txt
+```
+
+### 3. 配置机器人
+编辑 `config.json`:
+```json
+{
+  "dify_api_base": "https://api.dify.ai/v1",
+  "dify_api_key": "your-dify-api-key",
+  "channel_type": "wx859",
+  "wx859_api_host": "127.0.0.1",
+  "wx859_api_port": 8059
+}
+```
+
+### 4. 启动机器人
+
+#### Windows 用户
+```bash
+1. 进入`lib\wx859\859\redis`目录，双击`redis-server.exe`启动redis服务
+2. 进入`lib\wx859\859\win`目录，双击`wxapi_win64_v1_0_5.exe`启动 WX859 协议服务
+3. 进入项目根目录，右键`在终端中打开`，执行`python app.py`启动主程序
+4. 保活机制：以上三个窗口均需保持开启
+```
+#### Linux/macOS 用户
+```bash
+1. 进入项目根目录：`/root/dow-ipad-859`
+2. 赋予脚本执行权限：`chmod +x scripts/wx859_start.sh`
+3. 执行 `./scripts/wx859_start.sh` 脚本启动 WX859 协议服务
+4. 等待服务完全启动后使用 `python3 app.py` 启动主程序
+
+5.保活机制(不懂原理的可以问问deepseek)：
+tmux kill-session -t dify                  # 杀掉tmux旧进程      
+tmux new -s dify                           # 启动tmux新进程                 
+./scripts/wx859_start.sh                   # 后台运行脚本           
+tmux attach -t dify                        # 重连时恢复(正常无需这一步)                 
+pkill -f "python3 app.py"                  # 杀掉app.py旧进程     
+nohup python3 app.py & tail -f nohup.out   #挂载运行app.py进程 
+```
+### 5. 扫码登录
+- 程序第一次启动后会显示二维码
+- 使用微信扫码登录
+- 登录成功后自动开始消息监听
+
+## 三、常见问题
 
 ### 服务无法启动
 - 检查Redis是否运行
@@ -143,15 +141,13 @@ nohup python3 app.py & tail -f nohup.out   #挂载运行app.py进程
 - 尝试重启服务
 - 更换协议版本
 
+### 注意事项
+- 1. WX859协议为非官方实现，可能随微信更新而需要调整
+- 2. 建议使用备用微信账号进行测试
+- 3. 避免频繁登录/登出操作，防止触发风控
+- 4. 定期更新代码以获取最新功能和修复
 
-## 注意事项
-
-1. WX849协议为非官方实现，可能随微信更新而需要调整
-2. 建议使用备用微信账号进行测试
-3. 避免频繁登录/登出操作，防止触发风控
-4. 定期更新代码以获取最新功能和修复
-
-## 交流群
+### 交流群
 
 欢迎进入交流群进行相互讨论学习
 ![微信图片_20250624134616](https://github.com/user-attachments/assets/ab4b4b10-a374-42d5-b923-2b81f71e4d96)
