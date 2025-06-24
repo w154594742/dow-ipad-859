@@ -10,13 +10,13 @@
 
 - **多协议支持**: 支持859(暂时仅支持iPad，mac、car后续补充)
 - **多样化交互**: 支持文本、图片、语音、视频、卡片等多种消息类型
-- **智能对话**: 对接dify、coze、qwen、openai等自定义API，提供多种智能对话服务
+- **智能对话**: 对接dify、coze、qwen、openai、siliconflow等自定义API，提供多种智能对话服务
 - **灵活配置**: 支持白名单、黑名单等多样化配置
 - **高稳定性**: 基于成熟的WX859协议，连接稳定，功能丰富
 
 ### 核心配置说明
 
-复制`config-template.json`为`config.json`，并修改关键配置，支持dify、coze、qwen、openai、硅基免费模型等自定义LLM选项：
+复制`config-template.json`为`config.json`，并修改关键配置，支持dify、coze、qwen、openai、siliconflow模型等自定义LLM选项：
 
 ```json
 {
