@@ -122,7 +122,7 @@ tmux new -s dify                           # 启动tmux新进程
 ./scripts/wx859_start.sh                   # 后台运行脚本           
 tmux attach -t dify                        # 重连时恢复(正常无需这一步)                 
 pkill -f "python3 app.py"                  # 杀掉app.py旧进程     
-nohup python3 app.py & tail -f nohup.out   #挂载运行app.py进程 
+nohup python3 app.py & tail -f nohup.out   # 挂载运行app.py进程 
 ```
 ### 5. 扫码登录
 - 程序第一次启动后会显示二维码
