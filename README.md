@@ -45,7 +45,6 @@ pip install -r requirements-optional.txt
 2. 执行 `./scripts/wx859_start.sh` 脚本启动 WX859 协议服务
 3. 等待服务完全启动后使用 `python3 app.py` 启动主程序
 
-停止服务：
 保活机制：
 `tmux kill-session -t dify`           ###杀掉tmux旧进程
 `tmux new -s dify`                      ###启动tmux新进程
