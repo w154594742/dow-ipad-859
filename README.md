@@ -10,7 +10,7 @@
 
 ### 1. 环境准备
 ```bash
-# 确保Python 3.8+环境
+# 确保Python 3.8+环境，建议使用Python 3.11以上版本
 python --version
 
 # 安装依赖
