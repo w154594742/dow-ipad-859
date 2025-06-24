@@ -8,17 +8,21 @@
 
 ## 快速开始
 
-### 1. 环境准备
+### 1. 下载源码
+
 ```bash
 # 确保Python 3.8+环境，建议使用Python 3.11以上版本
-python --version
+git clone https://github.com/Lingyuzhou111/dow-ipad-859.git
+cd dow-ipad-859
+```
 
-# 安装依赖
+### 2. 安装依赖
+```bash
 pip install -r requirements.txt
 pip install -r requirements-optional.txt
 ```
 
-### 2. 配置机器人
+### 3. 配置机器人
 编辑 `config.json`:
 ```json
 {
@@ -30,7 +34,7 @@ pip install -r requirements-optional.txt
 }
 ```
 
-### 3. 启动机器人
+### 4. 启动机器人
 
 #### Windows 用户
 ```bash
@@ -54,7 +58,7 @@ tmux attach -t dify                        # 重连时恢复(正常无需这一�
 pkill -f "python3 app.py"                  # 杀掉app.py旧进程     
 nohup python3 app.py & tail -f nohup.out   #挂载运行app.py进程 
 ```
-### 4. 扫码登录
+### 5. 扫码登录
 - 程序第一次启动后会显示二维码
 - 使用微信扫码登录
 - 登录成功后自动开始消息监听
@@ -150,5 +154,5 @@ nohup python3 app.py & tail -f nohup.out   #挂载运行app.py进程
 ## 交流群
 
 欢迎进入交流群进行相互讨论学习
+![微信图片_20250624134616](https://github.com/user-attachments/assets/ab4b4b10-a374-42d5-b923-2b81f71e4d96)
 
-https://github.com/Lingyuzhou111/dow-ipad-859/blob/main/images/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20250624134616.jpg?raw=true
