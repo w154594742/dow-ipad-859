@@ -21,50 +21,10 @@ import urllib.parse
     author="Lingyuzhou",
 )
 class SearchMusic(Plugin):
-    # 定义不同音乐平台对应的appid映射
-    PLATFORM_APPIDS = {
-        "kugou": "wx79f2c4418704b4f8",    # 酷狗音乐
-        "kuwo": "wxc305711a2a7ad71c",     # 酷我音乐
-        "netease": "wx8dd6ecd81906fd84",  # 网易云音乐
-        "qishui": "wx904fb3ecf62c7dea",   # 汽水音乐
-        "kugou_mv": "wx72b795aca60ad321", # 酷狗MV
-        "qq": "wx5aa333606550dfd5"        # QQ音乐
-    }
-    
-    # 平台显示名称映射
-    PLATFORM_DISPLAY_NAMES = {
-        "kugou": {"prefix": "[酷狗]", "source": "酷狗音乐"},
-        "kuwo": {"prefix": "[酷我]", "source": "酷我音乐"},
-        "netease": {"prefix": "[网易]", "source": "网易云音乐"},
-        "qishui": {"prefix": "[网易]", "source": "汽水音乐"},
-        "kugou_mv": {"prefix": "[酷狗MV]", "source": "酷狗MV"},
-        "qq": {"prefix": "[QQ]", "source": "QQ音乐"}
-    }
-    
     def __init__(self):
         super().__init__()
         self.handlers[Event.ON_HANDLE_CONTEXT] = self.on_handle_context
         logger.info("[SearchMusic] inited.")
-
-    def get_appid_by_url(self, music_url, platform=""):
-        """
-        根据音乐URL域名动态选择AppID
-        解决AppID与音乐源不匹配的问题
-        """
-        if "kuwo.cn" in music_url:
-            return self.PLATFORM_APPIDS["kuwo"]  # 酷我音乐AppID
-        elif "kugou.com" in music_url:
-            return self.PLATFORM_APPIDS["kugou"]  # 酷狗音乐AppID
-        elif "music.163.com" in music_url or "netease" in music_url:
-            return self.PLATFORM_APPIDS["netease"]  # 网易云音乐AppID
-        elif "qishui" in music_url or "douyinpic.com" in music_url:
-            return self.PLATFORM_APPIDS["qishui"]  # 汽水音乐AppID
-        elif platform.lower() == "qq" and "kuwo.cn" in music_url:
-            # QQ音乐API返回酷我链接时，使用酷我AppID
-            logger.info(f"[SearchMusic] QQ音乐检测到酷我域名，使用酷我AppID: {music_url}")
-            return self.PLATFORM_APPIDS["kuwo"]
-        else:
-            return self.PLATFORM_APPIDS.get(platform.lower(), "")
 
     def construct_music_appmsg(self, title, singer, url, thumb_url="", platform=""):
         """
@@ -73,29 +33,32 @@ class SearchMusic(Plugin):
         :param singer: 歌手名
         :param url: 音乐播放链接
         :param thumb_url: 封面图片URL（可选）
-        :param platform: 音乐平台（酷狗/网易/汽水/酷我/qq）
+        :param platform: 音乐平台（酷狗/网易/抖音）
         :return: appmsg XML字符串
         """
         # 处理封面URL
         if thumb_url:
-            # 确保URL是以http或https开头
+            # 不再移除抖音图片URL的后缀
+            # 只确保URL是以http或https开头的
             if not thumb_url.startswith(("http://", "https://")):
                 thumb_url = "https://" + thumb_url.lstrip("/")
-            # 强制将http协议转换为https协议（微信安全要求）
-            elif thumb_url.startswith("http://"):
-                thumb_url = thumb_url.replace("http://", "https://", 1)
+            
             # 确保URL没有特殊字符
             thumb_url = thumb_url.replace("&", "&amp;")
                 
-        # 动态选择AppID：根据音乐URL域名选择匹配的AppID
-        appid = self.get_appid_by_url(url, platform)
-        
-        # 获取平台显示信息
-        platform_lower = platform.lower()
-        platform_info = self.PLATFORM_DISPLAY_NAMES.get(platform_lower)
-        if platform_info:
-            display_title = f"{platform_info['prefix']} {title}"
-            source_display_name = platform_info['source']
+        # 根据平台在标题中添加前缀
+        if platform.lower() == "kugou":
+            display_title = f"[酷狗] {title}"
+            source_display_name = "酷狗音乐"
+        elif platform.lower() == "netease":
+            display_title = f"[网易] {title}"
+            source_display_name = "网易云音乐"
+        elif platform.lower() == "qishui":
+            display_title = f"[汽水] {title}"
+            source_display_name = "汽水音乐"
+        elif platform.lower() == "kuwo":
+            display_title = f"[酷我] {title}"
+            source_display_name = "酷我音乐"
         else:
             display_title = title
             source_display_name = "音乐分享"
@@ -103,11 +66,8 @@ class SearchMusic(Plugin):
         # 确保URL没有特殊字符
         url = url.replace("&", "&amp;")
         
-        # 记录AppID选择信息，便于调试
-        logger.info(f"[SearchMusic] 平台: {platform}, URL域名: {url[:50]}..., 选择的AppID: {appid}")
-        
-        # 使用更简化的XML结构，但保留关键标签，并添加对应的appid
-        xml = f"""<appmsg appid="{appid}" sdkver="0">
+        # 使用更简化的XML结构，但保留关键标签
+        xml = f"""<appmsg appid="" sdkver="0">
     <title>{display_title}</title>
     <des>{singer}</des>
     <action>view</action>
@@ -140,85 +100,7 @@ class SearchMusic(Plugin):
 </appmsg>"""
         
         # 记录生成的XML，便于调试
-        logger.debug(f"[SearchMusic] 生成的音乐卡片XML (平台: {platform}, appid: {appid}): {xml}")
-        
-        return xml
-
-    def construct_mv_appmsg(self, title, singer, video_url, thumb_url="", platform="kugou_mv"):
-        """
-        构造MV分享卡片的appmsg XML
-        :param title: MV标题
-        :param singer: 歌手名
-        :param video_url: MV播放链接
-        :param thumb_url: 封面图片URL（可选）
-        :param platform: 平台名称（默认为kugou_mv）
-        :return: appmsg XML字符串
-        """
-        # 处理封面URL
-        if thumb_url:
-            # 确保URL是以http或https开头
-            if not thumb_url.startswith(("http://", "https://")):
-                thumb_url = "https://" + thumb_url.lstrip("/")
-            # 强制将http协议转换为https协议（微信安全要求）
-            elif thumb_url.startswith("http://"):
-                thumb_url = thumb_url.replace("http://", "https://", 1)
-            # 确保URL没有特殊字符
-            thumb_url = thumb_url.replace("&", "&amp;")
-        else:
-            # 使用默认MV封面
-            thumb_url = "https://p2.music.126.net/tGHU62DTszbFQ37W9qPHcw==/2002210674180197.jpg"
-                
-        # 根据平台获取对应的appid和显示信息
-        platform_lower = platform.lower()
-        appid = self.PLATFORM_APPIDS.get(platform_lower, "")
-        
-        # 获取平台显示信息
-        platform_info = self.PLATFORM_DISPLAY_NAMES.get(platform_lower)
-        if platform_info:
-            display_title = f"{platform_info['prefix']} {title}"
-            source_display_name = platform_info['source']
-        else:
-            display_title = title
-            source_display_name = "MV分享"
-        
-        # 确保URL没有特殊字符
-        video_url = video_url.replace("&", "&amp;")
-        
-        # 构造MV卡片XML，使用type=5表示视频类型
-        xml = f"""<appmsg appid="{appid}" sdkver="0">
-    <title>{display_title}</title>
-    <des>{singer}</des>
-    <action>view</action>
-    <type>5</type>
-    <showtype>0</showtype>
-    <soundtype>0</soundtype>
-    <mediatagname>视频</mediatagname>
-    <messageaction></messageaction>
-    <content></content>
-    <contentattr>0</contentattr>
-    <url>{video_url}</url>
-    <lowurl>{video_url}</lowurl>
-    <dataurl>{video_url}</dataurl>
-    <lowdataurl>{video_url}</lowdataurl>
-    <appattach>
-        <totallen>0</totallen>
-        <attachid></attachid>
-        <emoticonmd5></emoticonmd5>
-        <fileext>mp4</fileext>
-        <cdnthumburl>{thumb_url}</cdnthumburl>
-        <cdnthumbaeskey></cdnthumbaeskey>
-        <aeskey></aeskey>
-    </appattach>
-    <extinfo></extinfo>
-    <sourceusername></sourceusername>
-    <sourcedisplayname>{source_display_name}</sourcedisplayname>
-    <thumburl>{thumb_url}</thumburl>
-    <songalbumurl>{thumb_url}</songalbumurl>
-    <songlyric></songlyric>
-</appmsg>"""
-        
-        # 记录生成的XML，便于调试
-        logger.debug(f"[SearchMusic] 生成的MV卡片XML (平台: {platform}, appid: {appid}): {xml}")
+        logger.debug(f"[SearchMusic] 生成的音乐卡片XML: {xml}")
         
         return xml
 
@@ -309,29 +191,6 @@ class SearchMusic(Plugin):
                                 return cover_url
                 except Exception as e:
                     logger.error(f"[SearchMusic] 使用网易云音乐API获取封面时出错: {e}")
-            
-            elif platform == "qq":
-                # 如果是QQ音乐，尝试直接从QQ音乐API获取封面
-                if song_name and singer:
-                    try:
-                        # 直接使用QQ音乐API获取封面
-                        search_url = f"https://c.y.qq.com/soso/fcgi-bin/client_search_cp?w={urllib.parse.quote(f'{song_name} {singer}')}&format=json&p=1&n=1"
-                        response = requests.get(search_url, timeout=10)
-                        if response.status_code == 200:
-                            data = json.loads(response.text)
-                            if "data" in data and "song" in data["data"] and "list" in data["data"]["song"] and data["data"]["song"]["list"]:
-                                song_info = data["data"]["song"]["list"][0]
-                                if "albummid" in song_info:
-                                    albummid = song_info["albummid"]
-                                    cover_url = f"https://y.gtimg.cn/music/photo_new/T002R300x300M000{albummid}.jpg"
-                                    logger.info(f"[SearchMusic] 成功获取QQ音乐封面: {cover_url}")
-                                    return cover_url
-                    except Exception as e:
-                        logger.error(f"[SearchMusic] 获取QQ音乐封面时出错: {e}")
-                
-                # 如果没有找到，返回默认封面
-                logger.warning(f"[SearchMusic] 无法获取QQ音乐封面图片，使用默认封面: {song_name} - {singer}")
-                return default_cover
             
             # 对于其他平台，尝试使用歌曲名称和歌手名称搜索封面
             if song_name and singer:
@@ -1125,21 +984,15 @@ class SearchMusic(Plugin):
                                 singer = mv_data["singer"]
                                 video_url = mv_data["url"]
                                 
-                                # 获取MV封面图片
-                                thumb_url = mv_data.get('cover', '')
-                                
                                 # 验证视频URL是否有效
                                 valid_url = self.get_video_url(video_url)
                                 if valid_url:
                                     # 记录MV信息，便于调试
-                                    logger.info(f"[SearchMusic] 酷狗MV详情: {title} - {singer}, URL: {valid_url}, 封面: {thumb_url}")
+                                    logger.info(f"[SearchMusic] 酷狗MV详情: {title} - {singer}, URL: {valid_url}")
                                     
-                                    # 构造MV分享卡片
-                                    appmsg = self.construct_mv_appmsg(title, singer, valid_url, thumb_url, "kugou_mv")
-                                    
-                                    # 返回APP消息类型
-                                    reply.type = ReplyType.APP
-                                    reply.content = appmsg
+                                    # 返回文本消息类型，使用emoji+文本链接的形式
+                                    reply.type = ReplyType.TEXT
+                                    reply.content = f"🎵 歌曲：{title}\n🎤 歌手：{singer}\n🖼 歌曲封面：{mv_data.get('cover', '')}\n▶️ 播放MV：{valid_url}"
                                 else:
                                     reply.content = "视频链接无效，请稍后重试或尝试其他MV"
                             else:
@@ -1185,303 +1038,11 @@ class SearchMusic(Plugin):
                     logger.error(f"[SearchMusic] 酷狗MV搜索错误: {e}")
                     reply.content = "搜索失败，请稍后重试"
 
-        # 处理QQ点歌命令（搜索歌曲列表）
-        elif content.startswith("QQ点歌 ") or content.startswith("qq点歌 "):
-            song_name = content[4:].strip()  # 去除多余空格
-            if not song_name:
-                reply.content = "请输入要搜索的歌曲名称"
-                e_context["reply"] = reply
-                e_context.action = EventAction.BREAK_PASS
-                return
-                
-            # 检查是否包含序号（详情获取功能）
-            params = song_name.split()
-            if len(params) == 2 and params[1].isdigit():
-                song_name, song_number = params
-                # 修改URL，添加type=json参数获取JSON格式响应
-                url = f"https://hhlqilongzhu.cn/api/dg_QQmusicflac.php?msg={song_name}&n={song_number}&type=json"
-                try:
-                    response = requests.get(url, timeout=10)
-                    content = response.text
-                    
-                    # 尝试解析JSON响应
-                    try:
-                        data = json.loads(content)
-                        # 检查data字段中的信息
-                        if "data" in data and isinstance(data["data"], dict):
-                            data_obj = data["data"]
-                            if "song_name" in data_obj and "song_singer" in data_obj and "music_url" in data_obj:
-                                title = data_obj["song_name"]
-                                singer = data_obj["song_singer"]
-                                music_url = data_obj["music_url"]
-                                
-                                # 提取封面图片URL
-                                thumb_url = ""
-                                if "cover" in data_obj and data_obj["cover"]:
-                                    thumb_url = data_obj["cover"]
-                                    logger.info(f"[SearchMusic] 从QQ音乐API直接获取到封面URL: {thumb_url}")
-                                
-                                # 如果没有提取到封面，尝试从详情页获取或使用通用方法获取
-                                if not thumb_url:
-                                    detail_url = data_obj.get("link", "")
-                                    thumb_url = self.get_music_cover("qq", detail_url, title, singer)
-                                
-                                # 记录封面URL信息，便于调试
-                                logger.info(f"[SearchMusic] QQ点歌封面URL: {thumb_url}")
-                                
-                                # 构造音乐分享卡片
-                                appmsg = self.construct_music_appmsg(title, singer, music_url, thumb_url, "qq")
-                                
-                                # 返回APP消息类型
-                                reply.type = ReplyType.APP
-                                reply.content = appmsg
-                            else:
-                                reply.content = "未找到该歌曲，请确认歌名和序号是否正确"
-                        
-                        # 如果data字段不存在或解析失败，尝试直接获取字段
-                        elif "title" in data and "singer" in data and "url" in data:
-                            title = data["title"]
-                            singer = data["singer"]
-                            music_url = data["url"]
-                            
-                            # 提取封面图片URL
-                            thumb_url = ""
-                            if "cover" in data and data["cover"]:
-                                thumb_url = data["cover"]
-                            elif "pic" in data and data["pic"]:
-                                thumb_url = data["pic"]
-                            
-                            # 如果没有提取到封面，尝试从详情页获取或使用通用方法获取
-                            if not thumb_url:
-                                detail_url = data.get("link", "")
-                                thumb_url = self.get_music_cover("qq", detail_url, title, singer)
-                            
-                            # 记录封面URL信息，便于调试
-                            logger.info(f"[SearchMusic] QQ点歌封面URL: {thumb_url}")
-                            
-                            # 构造音乐分享卡片
-                            appmsg = self.construct_music_appmsg(title, singer, music_url, thumb_url, "qq")
-                            
-                            # 返回APP消息类型
-                            reply.type = ReplyType.APP
-                            reply.content = appmsg
-                        else:
-                            reply.content = "未找到该歌曲，请确认歌名和序号是否正确"
-                    except json.JSONDecodeError:
-                        # 尝试使用文本格式解析
-                        song_info = content.split('\n')
-                        if len(song_info) >= 4:  # 确保有足够的信息行
-                            # 提取歌曲信息
-                            title_line = next((line for line in song_info if line.startswith("歌名：")), "")
-                            singer_line = next((line for line in song_info if line.startswith("歌手：")), "")
-                            detail_line = next((line for line in song_info if line.startswith("歌曲详情页：")), "")
-                            music_line = next((line for line in song_info if line.startswith("播放链接：")), "")
-                            
-                            if title_line and singer_line and music_line:
-                                title = title_line.replace("歌名：", "").strip()
-                                singer = singer_line.replace("歌手：", "").strip()
-                                detail_url = detail_line.replace("歌曲详情页：", "").strip() if detail_line else ""
-                                music_url = music_line.replace("播放链接：", "").strip()
-                                
-                                # 尝试从响应中提取封面图片URL
-                                thumb_url = self.extract_cover_from_response(content)
-                                
-                                # 如果从响应中没有提取到封面，尝试从详情页获取
-                                if not thumb_url and detail_url:
-                                    thumb_url = self.get_music_cover("qq", detail_url, title, singer)
-                                
-                                # 如果仍然没有封面，使用QQ音乐封面获取方法
-                                if not thumb_url:
-                                    thumb_url = self.get_music_cover("qq", "", title, singer)
-                                
-                                # 构造音乐分享卡片
-                                appmsg = self.construct_music_appmsg(title, singer, music_url, thumb_url, "qq")
-                                
-                                # 返回APP消息类型
-                                reply.type = ReplyType.APP
-                                reply.content = appmsg
-                            else:
-                                reply.content = "未找到该歌曲，请确认歌名和序号是否正确"
-                        else:
-                            reply.content = "获取失败，请稍后重试"
-                        
-                except Exception as e:
-                    logger.error(f"[SearchMusic] QQ点歌详情错误: {e}")
-                    reply.content = "获取失败，请稍后重试"
-            else:
-                # 使用修复后的QQ音乐搜索功能
-                reply.content = self.fix_qq_music_search(song_name)
-
-        # 处理QQ听歌命令
-        elif content.startswith("QQ听歌 ") or content.startswith("qq听歌 "):
-            params = content[4:].strip().split()
-            if len(params) != 2:
-                reply.content = "请输入正确的格式：QQ听歌 歌曲名称 序号"
-                e_context["reply"] = reply
-                e_context.action = EventAction.BREAK_PASS
-                return
-                
-            song_name, song_number = params
-            if not song_number.isdigit():
-                reply.content = "请输入正确的歌曲序号（纯数字）"
-                e_context["reply"] = reply
-                e_context.action = EventAction.BREAK_PASS
-                return
-                
-            # 修改URL，明确使用JSON格式响应，增加重试和更长的超时
-            url = f"https://hhlqilongzhu.cn/api/dg_QQmusicflac.php?msg={urllib.parse.quote(song_name)}&n={song_number}&type=json"
-            
-            try:
-                # 增加重试机制和更长的超时时间
-                for retry in range(3):
-                    try:
-                        response = requests.get(url, timeout=15)
-                        if response.status_code == 200:
-                            break
-                    except requests.RequestException as e:
-                        if retry == 2:
-                            logger.error(f"[SearchMusic] QQ听歌网络错误，重试失败: {e}")
-                            reply.content = "获取失败，网络连接错误，请稍后重试"
-                            e_context["reply"] = reply
-                            e_context.action = EventAction.BREAK_PASS
-                            return
-                        logger.warning(f"[SearchMusic] QQ听歌重试 {retry+1}/3: {e}")
-                        time.sleep(1)
-                
-                # 记录原始响应内容，便于调试
-                logger.debug(f"[SearchMusic] QQ听歌原始响应: {response.text[:200]}...")
-                
-                # 尝试多种方式解析响应获取音乐URL
-                music_url = None
-                
-                # 首先尝试解析JSON
-                try:
-                    data = json.loads(response.text)
-                    # 检查标准JSON格式
-                    if "data" in data and isinstance(data["data"], dict) and "music_url" in data["data"]:
-                        music_url = data["data"]["music_url"]
-                        logger.info(f"[SearchMusic] 从JSON data字段获取到QQ音乐URL: {music_url}")
-                    # 检查简化的JSON格式
-                    elif "url" in data and data["url"]:
-                        music_url = data["url"]
-                        logger.info(f"[SearchMusic] 从JSON url字段获取到QQ音乐URL: {music_url}")
-                    elif "music_url" in data:
-                        music_url = data["music_url"]
-                        logger.info(f"[SearchMusic] 从JSON music_url字段获取到QQ音乐URL: {music_url}")
-                except json.JSONDecodeError:
-                    # 不是JSON格式，尝试文本格式解析
-                    logger.warning("[SearchMusic] QQ听歌响应不是有效的JSON，尝试文本解析")
-                
-                # 如果JSON解析失败，尝试文本解析
-                if not music_url:
-                    # 尝试从文本中提取播放链接
-                    music_pattern = r"播放链接：(https?://[^\s]+)"
-                    match = re.search(music_pattern, response.text)
-                    if match:
-                        music_url = match.group(1)
-                        logger.info(f"[SearchMusic] 从文本中提取到QQ音乐URL: {music_url}")
-                
-                # 最后一次尝试：如果以上都失败，重新请求纯文本格式
-                if not music_url:
-                    logger.warning("[SearchMusic] 尝试使用text格式重新获取QQ音乐链接")
-                    text_url = f"https://hhlqilongzhu.cn/api/dg_QQmusicflac.php?msg={urllib.parse.quote(song_name)}&n={song_number}&type=text"
-                    try:
-                        text_response = requests.get(text_url, timeout=15)
-                        if text_response.status_code == 200:
-                            # 尝试从文本中提取播放链接
-                            music_pattern = r"播放链接：(https?://[^\s]+)"
-                            match = re.search(music_pattern, text_response.text)
-                            if match:
-                                music_url = match.group(1)
-                                logger.info(f"[SearchMusic] 从文本格式重新获取到QQ音乐URL: {music_url}")
-                    except Exception as e:
-                        logger.error(f"[SearchMusic] 文本格式重新获取QQ音乐URL失败: {e}")
-                
-                # 检查是否成功获取到音乐URL
-                if not music_url:
-                    logger.error("[SearchMusic] 无法获取QQ音乐URL")
-                    reply.content = "未找到该歌曲的播放链接，请确认歌名和序号是否正确"
-                    e_context["reply"] = reply
-                    e_context.action = EventAction.BREAK_PASS
-                    return
-                
-                # 下载音乐文件
-                music_path = self.download_music(music_url, "qq")
-                
-                if music_path:
-                    # 返回语音消息
-                    reply.type = ReplyType.VOICE
-                    reply.content = music_path
-                else:
-                    reply.type = ReplyType.TEXT
-                    reply.content = "音乐文件下载失败，请稍后重试"
-                    
-            except Exception as e:
-                logger.error(f"[SearchMusic] QQ听歌错误: {e}")
-                reply.content = "获取失败，请稍后重试"
-
         else:
             return
 
         e_context["reply"] = reply
         e_context.action = EventAction.BREAK_PASS
-
-    def fix_qq_music_search(self, song_name):
-        """
-        修复QQ音乐搜索功能，根据API文档使用正确的参数和返回格式处理
-        :param song_name: 歌曲名称
-        :return: 歌曲列表或错误信息
-        """
-        try:
-            # 使用明确的type=text参数确保返回文本格式
-            url = f"https://hhlqilongzhu.cn/api/dg_QQmusicflac.php?msg={urllib.parse.quote(song_name)}&n=&type=text"
-            
-            logger.info(f"[SearchMusic] 发送QQ音乐搜索请求: {url}")
-            
-            # 设置更长的超时时间，增加重试次数
-            for retry in range(3):
-                try:
-                    response = requests.get(url, timeout=15)
-                    if response.status_code == 200:
-                        break
-                except requests.RequestException as e:
-                    if retry == 2:
-                        logger.error(f"[SearchMusic] QQ音乐搜索网络错误，重试失败: {e}")
-                        return "搜索失败，网络连接错误，请稍后重试"
-                    logger.warning(f"[SearchMusic] QQ音乐搜索重试 {retry+1}/3: {e}")
-                    time.sleep(1)
-            
-            # 检查响应是否为空
-            if not response.text.strip():
-                logger.error("[SearchMusic] QQ音乐搜索返回空响应")
-                return "未找到相关歌曲，请换个关键词试试"
-            
-            # 记录返回的原始内容，便于调试
-            logger.debug(f"[SearchMusic] QQ音乐搜索返回原始内容: {response.text[:200]}...")
-            
-            # 处理文本格式的响应
-            songs = response.text.strip().split('\n')
-            if not songs or len(songs) == 0:
-                logger.warning("[SearchMusic] QQ音乐搜索未返回歌曲列表")
-                return "未找到相关歌曲，请换个关键词试试"
-            
-            # 检查是否包含错误信息
-            if len(songs) == 1 and ("错误" in songs[0] or "失败" in songs[0] or "找不到" in songs[0]):
-                logger.warning(f"[SearchMusic] QQ音乐搜索返回错误: {songs[0]}")
-                return "未找到相关歌曲，请换个关键词试试"
-                
-            # 返回格式化的结果
-            reply_content = " 为你在QQ音乐库中找到以下歌曲：\n\n"
-            for song in songs:
-                if song.strip():  # 确保不是空行
-                    reply_content += f"{song}\n"
-            reply_content += f"\n请发送「QQ点歌 {song_name} 序号」获取歌曲详情\n或发送「QQ听歌 {song_name} 序号」来播放对应歌曲"
-            
-            return reply_content
-            
-        except Exception as e:
-            logger.error(f"[SearchMusic] QQ音乐搜索异常: {e}")
-            return "搜索失败，请稍后重试"
 
     def get_help_text(self, **kwargs):
         return (
@@ -1489,7 +1050,7 @@ class SearchMusic(Plugin):
             "1. 酷狗音乐：\n"
             "   - 搜索歌单：发送「酷狗点歌 歌曲名称」\n"
             "   - 音乐卡片：发送「酷狗点歌 歌曲名称 序号」\n"
-            "   - MV卡片：发送「酷狗MV 歌曲名称」搜索MV，发送「酷狗MV 歌曲名称 序号」获取MV卡片\n"
+            "   - 视频播放：发送「酷狗MV 歌曲名称」搜索MV，发送「酷狗MV 歌曲名称 序号」获取MV详情\n"
             "   - 语音播放：发送「酷狗听歌 歌曲名称 序号」\n"
             "2. 网易音乐：\n"
             "   - 搜索歌单：发送「网易点歌 歌曲名称」\n"
@@ -1503,11 +1064,7 @@ class SearchMusic(Plugin):
             "   - 搜索歌单：发送「酷我点歌 歌曲名称」\n"
             "   - 音乐卡片：发送「酷我点歌 歌曲名称 序号」\n"
             "   - 语音播放：发送「酷我听歌 歌曲名称 序号」\n"
-            "5. QQ音乐：\n"
-            "   - 搜索歌单：发送「QQ点歌 歌曲名称」\n"
-            "   - 音乐卡片：发送「QQ点歌 歌曲名称 序号」\n"
-            "   - 语音播放：发送「QQ听歌 歌曲名称 序号」\n"
-            "6. 随机点歌：发送「随机点歌」获取随机音乐卡片\n"
-            "7. 随机听歌：发送「随机听歌」获取随机语音播放\n"
+            "5. 随机点歌：发送「随机点歌」获取随机音乐卡片\n"
+            "6. 随机听歌：发送「随机听歌」获取随机语音播放\n"
             "注：序号在搜索结果中获取"
         )
