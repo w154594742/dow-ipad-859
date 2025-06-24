@@ -224,8 +224,9 @@ class MessageMixin(WechatAPIClientBase):
             media_info = MediaInfo.parse(BytesIO(video))
         elif isinstance(video, os.PathLike):
             with open(video, "rb") as f:
-                file_len = len(f.read())
-                vid_base64 = base64.b64encode(f.read()).decode()
+                video_bytes = f.read()
+                file_len = len(video_bytes)
+                vid_base64 = base64.b64encode(video_bytes).decode()
             media_info = MediaInfo.parse(video)
         else:
             raise ValueError("video should be str, bytes, or path")
@@ -278,7 +279,7 @@ class MessageMixin(WechatAPIClientBase):
         logger.info("开始发送视频: 对方wxid:{} 视频base64略 图片base64略 预计耗时:{}秒", wxid, predict_time)
 
         async with aiohttp.ClientSession() as session:
-            json_param = {"Wxid": self.wxid, "ToWxid": wxid, "Base64": "data:video/mp4;base64,"+ vid_base64, "ImageBase64": "data:image/jpeg;base64,"+image_base64,
+            json_param = {"Wxid": self.wxid, "ToWxid": wxid, "Base64": vid_base64, "ImageBase64": image_base64,
                           "PlayLength": duration}
             async with session.post(self._get_full_url("/Msg/SendVideo"), json=json_param) as resp:
                 json_resp = await resp.json()

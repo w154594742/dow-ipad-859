@@ -11,7 +11,7 @@ from .protect import protector
 from ..errors import *
 
 
-class LoginClient(WechatAPIClientBase):
+class LoginMixin(WechatAPIClientBase):
     async def is_running(self) -> bool:
         """检查API服务是否运行
 
