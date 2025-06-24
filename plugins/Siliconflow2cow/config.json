@@ -1,0 +1,8 @@
+{
+  "auth_token": "",
+  "siliconflow_prefixes": ["SF画图"],
+  "pollinations_prefixes": ["画", "p画"],
+  "image_output_dir": "./plugins/Siliconflow2cow/images",
+  "clean_interval": 3,
+  "clean_check_interval": 3600
+}

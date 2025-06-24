@@ -1,0 +1,16 @@
+{
+    "plugins": {
+        "Godcmd": {
+            "enabled": true,
+            "priority": 999
+        },
+        "Hello": {
+            "enabled": true,
+            "priority": -1
+        },
+        "Finish": {
+            "enabled": true,
+            "priority": -999
+        }
+    }
+}
