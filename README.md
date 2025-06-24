@@ -34,10 +34,10 @@ pip install -r requirements-optional.txt
 
 #### Windows 用户
 ```bash
-1.进入`lib\wx859\859\redis`目录，双击`redis-server.exe`启动redis服务
-2.进入`lib\wx859\859\win`目录，双击`wxapi_win64_v1_0_5.exe`启动 WX859 协议服务
-3.进入项目根目录，右键`在终端中打开`，执行`python app.py`启动主程序
-4.保活机制：以上三个窗口均需保持开启
+1. 进入`lib\wx859\859\redis`目录，双击`redis-server.exe`启动redis服务
+2. 进入`lib\wx859\859\win`目录，双击`wxapi_win64_v1_0_5.exe`启动 WX859 协议服务
+3. 进入项目根目录，右键`在终端中打开`，执行`python app.py`启动主程序
+4. 保活机制：以上三个窗口均需保持开启
 ```
 #### Linux/macOS 用户
 ```bash
@@ -46,12 +46,18 @@ pip install -r requirements-optional.txt
 3. 执行 `./scripts/wx859_start.sh` 脚本启动 WX859 协议服务
 4. 等待服务完全启动后使用 `python3 app.py` 启动主程序
 5.保活机制：
-`tmux kill-session -t dify`           ###杀掉tmux旧进程
-`tmux new -s dify`                      ###启动tmux新进程
-`./scripts/wx859_start.sh`           ###后台运行脚本
-`tmux attach -t dify`                   ###重连时恢复(正常无需这一步)
-`pkill -f "python3 app.py"`        ###杀掉app.py旧进程
-`nohup python3 app.py & tail -f nohup.out`   ###挂载运行app.py进程
+# 杀掉tmux旧进程
+tmux kill-session -t dify           
+# 启动tmux新进程
+tmux new -s dify                      
+# 后台运行脚本
+./scripts/wx859_start.sh
+# 重连时恢复(正常无需这一步)           
+tmux attach -t dify
+# 杀掉app.py旧进程                  
+pkill -f "python3 app.py"
+ #挂载运行app.py进程     
+nohup python3 app.py & tail -f nohup.out 
 ```
 ### 4. 扫码登录
 - 程序第一次启动后会显示二维码
