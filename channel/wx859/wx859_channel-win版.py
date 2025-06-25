@@ -14,6 +14,7 @@ import uuid
 from typing import Union, BinaryIO, Optional, Tuple, List, Dict
 import urllib.parse  
 import requests
+from PIL import Image
 from bridge.context import Context, ContextType  
 from bridge.reply import Reply, ReplyType
 from channel.chat_channel import ChatChannel
@@ -1561,18 +1562,7 @@ class WX859Channel(ChatChannel):
                         if not hasattr(self, '_no_msg_count'):
                             self._no_msg_count = 0
                         self._no_msg_count += 1
-                        
-#                       if self._no_msg_count % 60 == 1:  # 改为每60次记录一次
-#                           logger.debug(f"[WX859] 已连续 {self._no_msg_count} 次未获取到新消息")
-#                           # 记录当前Synckey状态
-#                           if hasattr(self.bot, '_synckey'):
-#                               synckey_preview = self.bot._synckey[:50] + "..." if len(self.bot._synckey) > 50 else self.bot._synckey
-#                               logger.debug(f"[WX859] 当前Synckey: {synckey_preview}")
-#                           else:
-#                               logger.debug(f"[WX859] bot对象没有_synckey属性")
-#                       else:
-#                           logger.debug("[WX859] 本次未获取到新消息")
-                    # 重置错误计数
+
                     error_count = 0
                     login_error_count = 0  # 重置登录错误计数
                 except Exception as e:
@@ -5363,79 +5353,138 @@ class WX859Channel(ChatChannel):
 
     async def _prepare_video_and_thumb(self, video_url: str, session_id: str) -> dict:
         """
-        异步下载视频，提取缩略图和时长。
-        返回包含 video_path, thumb_path, duration 的字典，失败则返回 None。
+        异步下载视频，智能提取高质量的缩略图和时长。
+        该版本经过优化，可以解决因缩略图问题导致的视频发送失败。
+
+        :param video_url: 视频的URL.
+        :param session_id: 当前会话的ID.
+        :return: 包含 video_path, thumb_path, duration 的字典.
         """
         tmp_dir = TmpDir().path()
-        # 使用 uuid 生成更独特的文件名，避免仅依赖 session_id 和时间戳可能产生的冲突
         unique_id = str(uuid.uuid4())
-        video_file_name = f"tmp_video_{session_id}_{unique_id}.mp4" # 假设是mp4
+        video_file_name = f"tmp_video_{session_id}_{unique_id}.mp4"
         video_file_path = os.path.join(tmp_dir, video_file_name)
         thumb_file_name = f"tmp_thumb_{session_id}_{unique_id}.jpg"
         thumb_file_path = os.path.join(tmp_dir, thumb_file_name)
 
-        video_downloaded = False
+        # 1. 下载视频文件
         try:
-            # 1. 异步下载视频
             async with aiohttp.ClientSession() as session:
-                async with session.get(video_url, timeout=aiohttp.ClientTimeout(total=60)) as resp: # 60秒超时
+                async with session.get(video_url, timeout=aiohttp.ClientTimeout(total=120)) as resp: # 增加超时到120秒
                     if resp.status == 200:
                         with open(video_file_path, 'wb') as f:
                             while True:
-                                chunk = await resp.content.read(1024) # 读取块
+                                chunk = await resp.content.read(8192) # 增加块大小
                                 if not chunk:
                                     break
                                 f.write(chunk)
-                        video_downloaded = True
-                        logger.debug(f"[WX859] Video downloaded to {video_file_path} from {video_url}")
+                        logger.debug(f"[WX859] 视频下载成功: {video_file_path}")
                     else:
-                        logger.error(f"[WX859] Failed to download video from {video_url}. Status: {resp.status}")
+                        logger.error(f"[WX859] 视频下载失败，状态码: {resp.status}, URL: {video_url}")
                         return None
         except Exception as e:
-            logger.error(f"[WX859] Exception during video download from {video_url}: {e}", exc_info=True)
-            if os.path.exists(video_file_path): # 如果下载部分成功但后续出错，清理掉
+            logger.error(f"[WX859] 下载视频时发生异常: {e}", exc_info=True)
+            if os.path.exists(video_file_path):
                 os.remove(video_file_path)
             return None
 
-        if not video_downloaded:
-            return None
-
-        # 2. 使用 OpenCV 处理视频，提取缩略图和时长
+        # 2. 提取视频信息和生成缩略图
         duration = 0
         thumb_generated = False
-        cap = None # 初始化 cap
+        cap = None
         try:
             cap = cv2.VideoCapture(video_file_path)
             if not cap.isOpened():
-                logger.error(f"[WX859] OpenCV could not open video file: {video_file_path}")
-                # 不需要在这里删除 video_file_path，send_video 的 finally 会处理
-                return {"video_path": video_file_path, "thumb_path": None, "duration": 0} # 返回部分信息
+                logger.error(f"[WX859] OpenCV无法打开视频文件: {video_file_path}")
+                return {"video_path": video_file_path, "thumb_path": None, "duration": 0}
 
-            # 获取时长
             fps = cap.get(cv2.CAP_PROP_FPS)
-            frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+            frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             if fps > 0 and frame_count > 0:
                 duration = int(frame_count / fps)
             else:
-                logger.warning(f"[WX859] Could not get valid fps ({fps}) or frame_count ({frame_count}) for {video_file_path}. Duration set to 0.")
-                duration = 0 # 或设置为一个默认值，或标记为未知
+                logger.warning(f"[WX859] 无法获取有效的视频帧率或总帧数: {video_file_path}")
 
-            # 提取第一帧作为缩略图
-            ret, frame = cap.read()
-            if ret:
-                # 有些视频可能需要旋转，这里暂不处理旋转，直接保存帧
-                # 可以考虑Pillow进行更精细的图片处理和保存，但cv2.imwrite通常足够
-                cv2.imwrite(thumb_file_path, frame) 
+            # 智能选择截图位置，避免片头黑屏
+            positions_to_try = [0.1, 0.3, 0.01] # 尝试视频10%, 30%, 1%的位置
+            frame_to_save = None
+
+            for pos in positions_to_try:
+                frame_pos = int(frame_count * pos)
+                cap.set(cv2.CAP_PROP_POS_FRAMES, frame_pos)
+                ret, frame = cap.read()
+                if ret:
+                    # 简单检查帧是否为全黑
+                    if frame.any():
+                        frame_to_save = frame
+                        logger.info(f"[WX859] 成功在视频 {pos*100:.0f}% 位置截取到有效帧")
+                        break
+            
+            # 如果所有位置都失败，尝试第一帧作为备选
+            if frame_to_save is None:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                ret, frame = cap.read()
+                if ret:
+                    frame_to_save = frame
+                    logger.warning(f"[WX859] 未找到理想帧，使用视频第一帧作为备选")
+
+            # 使用Pillow处理并保存缩略图（参考gewechat_channel.py，保持原始比例）
+            if frame_to_save is not None:
+                # OpenCV的颜色通道是BGR, Pillow是RGB, 需要转换
+                rgb_frame = cv2.cvtColor(frame_to_save, cv2.COLOR_BGR2RGB)
+                img = Image.fromarray(rgb_frame)
+                
+                # 获取原始图片尺寸
+                original_width, original_height = img.size
+                logger.debug(f"[WX859] 原始帧尺寸: {original_width}x{original_height}")
+                
+                # 参考gewechat_channel.py的做法：保持原图尺寸，不强制缩放为正方形
+                # 但为了避免缩略图过大，设置最大尺寸限制
+                max_size = 480  # 最大边长，参考gewechat的默认尺寸
+                
+                # 如果图片任一边超过最大尺寸，进行等比缩放
+                if original_width > max_size or original_height > max_size:
+                    # 计算缩放比例，保持宽高比
+                    scale = min(max_size / original_width, max_size / original_height)
+                    new_width = int(original_width * scale)
+                    new_height = int(original_height * scale)
+                    
+                    # 使用高质量重采样方法缩放图片
+                    img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                    logger.info(f"[WX859] 缩放缩略图尺寸: {original_width}x{original_height} -> {new_width}x{new_height}")
+                else:
+                    # 尺寸合适，保持原始尺寸
+                    new_width, new_height = original_width, original_height
+                    logger.info(f"[WX859] 保持原始缩略图尺寸: {new_width}x{new_height}")
+                
+                # 应用图像增强处理
+                from PIL import ImageFilter, ImageEnhance
+                try:
+                    # 轻微锐化，提升清晰度
+                    img = img.filter(ImageFilter.UnsharpMask(radius=0.8, percent=110, threshold=3))
+                    
+                    # 增强对比度
+                    enhancer = ImageEnhance.Contrast(img)
+                    img = enhancer.enhance(1.08)
+                    
+                    # 增强色彩饱和度
+                    enhancer = ImageEnhance.Color(img)
+                    img = enhancer.enhance(1.03)
+                    
+                    logger.debug(f"[WX859] 已应用图像增强处理")
+                except Exception as e:
+                    logger.debug(f"[WX859] 图片增强处理失败: {e}")
+                
+                # 保存高质量缩略图，参考gewechat的质量设置
+                img.save(thumb_file_path, 'JPEG', quality=95, optimize=True, progressive=False)
                 thumb_generated = True
-                logger.debug(f"[WX859] Thumbnail generated for {video_file_path} at {thumb_file_path}. Duration: {duration}s")
+                logger.info(f"[WX859] 成功生成原始比例高质量缩略图: {thumb_file_path} ({new_width}x{new_height}). 时长: {duration}s")
             else:
-                logger.warning(f"[WX859] Could not read frame from video {video_file_path} to generate thumbnail.")
-        
+                logger.error(f"[WX859] 无法从视频中读取任何有效帧用于生成缩略图: {video_file_path}")
+
         except Exception as e:
-            logger.error(f"[WX859] Exception during OpenCV video processing for {video_file_path}: {e}", exc_info=True)
-            # 即使处理失败，视频已下载，返回视频路径和获取到的时长（可能为0）
-            # thumb_path 将为 None（如果之前未成功生成）
-            # 不需要在这里删除 video_file_path，send_video 的 finally 会处理
+            logger.error(f"[WX859] 处理视频时发生异常: {e}", exc_info=True)
+
             return {"video_path": video_file_path, "thumb_path": None, "duration": duration}
         finally:
             if cap:
@@ -5450,7 +5499,7 @@ class WX859Channel(ChatChannel):
     async def send_video(self, to_wxid: str, video_url: str, session_id: str):
         """
         下载视频URL，准备视频路径、缩略图路径和时长，
-        然后调用 self.api_client.send_video_message 发送。
+        然后使用Base64编码方式发送（参考xxxbot_channel.py的成功实现）。
         """
         logger.info(f"[WX859] Preparing video from URL: {video_url} for recipient {to_wxid} (session: {session_id})")
         prepared_video_info = await self._prepare_video_and_thumb(video_url, session_id)
@@ -5460,79 +5509,78 @@ class WX859Channel(ChatChannel):
             return None 
 
         video_path = prepared_video_info["video_path"]
-        thumb_path = prepared_video_info.get("thumb_path") # May be None if fallback is used or generation failed
-        # duration = prepared_video_info.get("duration", 0) # api_client.send_video_message will recalculate duration
+        thumb_path = prepared_video_info.get("thumb_path")
+        duration = prepared_video_info.get("duration", 10)
 
-        if not os.path.exists(video_path): # Double check, _prepare_video_and_thumb should ensure this
+        if not os.path.exists(video_path):
             logger.error(f"[WX859] Prepared video file does not exist after _prepare_video_and_thumb: {video_path}")
             return None
 
-        # thumb_path can be None, send_video_message handles a None image by using a fallback.
-        # If thumb_path is provided but doesn't exist, it's an issue.
-        if thumb_path and not os.path.exists(thumb_path):
-            logger.warning(f"[WX859] Prepared thumbnail file does not exist: {thumb_path}. Passing None to API client.")
-            thumb_path = None 
-
         try:
-            logger.info(f"[WX859] Calling direct API for video sending. ToWxid: {to_wxid}, VideoPath: {video_path}, ThumbPath: {thumb_path if thumb_path else 'None'}")
+            logger.info(f"[WX859] Using Base64 method for video sending. ToWxid: {to_wxid}, VideoPath: {video_path}, ThumbPath: {thumb_path if thumb_path else 'None'}")
             
-            # 使用与849协议相同的方式：调用bot.send_video_message方法
-            try:
-                logger.info(f"[WX859] Calling bot.send_video_message. ToWxid: {to_wxid}, VideoPath: {video_path}, ThumbPath: {thumb_path if thumb_path else 'Default'}")
-                
-                # 使用与849协议相同的方式
-                if hasattr(self.bot, 'send_video_message'):
-                    from pathlib import Path
-                    
-                    video_path_obj = Path(video_path)
-                    image_path_obj = Path(thumb_path) if thumb_path and os.path.exists(thumb_path) else None
-                    
-                    # 再次确认视频文件存在
-                    if not os.path.exists(video_path_obj):
-                        logger.error(f"[WX859] Video path object {video_path_obj} does not exist before API call.")
-                        return {"Success": False, "Msg": f"Video path {video_path_obj} vanished."}
-
-                    result_tuple = await self.bot.send_video_message(
-                        wxid=to_wxid, 
-                        video=video_path_obj,  # 传递 Path 对象
-                        image=image_path_obj   # 传递 Path 对象或 None
-                    )
-                    
-                    if result_tuple and isinstance(result_tuple, tuple) and len(result_tuple) == 2:
-                        logger.info(f"[WX859] Video sent successfully via bot.send_video_message to {to_wxid}. ClientMsgId: {result_tuple[0]}, NewMsgId: {result_tuple[1]}")
-                        return {"Success": True, "Data": {"clientMsgId": result_tuple[0], "newMsgId": result_tuple[1]}, "Msg": "Sent successfully"}
-                    else:
-                        logger.error(f"[WX859] bot.send_video_message to {to_wxid} did not return expected tuple or may have failed silently. Response: {result_tuple}")
-                        return {"Success": False, "Data": result_tuple, "Msg": "API call may have failed or returned unexpected data."}
+            # 参考xxxbot_channel.py的实现：使用Base64编码方式发送
+            import base64
+            
+            # 读取视频文件为Base64
+            with open(video_path, 'rb') as f:
+                video_base64 = base64.b64encode(f.read()).decode('utf-8')
+            
+            # 读取缩略图文件为Base64（如果存在）
+            thumb_data = ""
+            if thumb_path and os.path.exists(thumb_path):
+                with open(thumb_path, 'rb') as f:
+                    thumb_data = base64.b64encode(f.read()).decode('utf-8')
+                logger.info(f"[WX859] 缩略图Base64大小: {len(thumb_data)}")
+            else:
+                logger.warning(f"[WX859] 缩略图不存在，将发送空缩略图")
+            
+            logger.info(f"[WX859] 视频Base64大小: {len(video_base64)}, 时长: {duration}秒")
+            
+            # 构造请求数据（参考xxxbot_channel.py的格式）
+            data = {
+                "Wxid": self.wxid,
+                "ToWxid": to_wxid,
+                "Base64": "data:video/mp4;base64," + video_base64,
+                "ImageBase64": "data:image/jpeg;base64," + thumb_data if thumb_data else "",
+                "PlayLength": duration
+            }
+            
+            # 使用_call_api方法发送请求
+            logger.info(f"[WX859] 发送视频请求，数据大小: {len(video_base64)//1024}KB")
+            
+            result = await self._call_api("/Msg/SendVideo", data)
+            
+            if result and isinstance(result, dict):
+                if result.get("Success"):
+                    logger.info(f"[WX859] 视频发送成功: ToWxid={to_wxid}")
+                    return {"Success": True, "Data": result.get("Data", {}), "Msg": "Video sent successfully"}
                 else:
-                    logger.error("[WX859] bot does not have send_video_message method.")
-                    return {"Success": False, "Msg": "Bot object is missing send_video_message method."}
-                    
-            except Exception as api_e:
-                logger.error(f"[WX859] Exception during bot.send_video_message: {api_e}")
-                import traceback
-                logger.error(f"[WX859] Traceback: {traceback.format_exc()}")
-                return {"Success": False, "Msg": f"bot.send_video_message exception: {api_e}"}
+                    error_msg = result.get("Message", "Unknown error")
+                    logger.error(f"[WX859] 视频发送失败: {error_msg}")
+                    return {"Success": False, "Msg": error_msg}
+            else:
+                logger.error(f"[WX859] 视频发送返回无效结果: {result}")
+                return {"Success": False, "Msg": "Invalid API response"}
 
         except Exception as e:
-            # 如果 self.api_client.send_video_message 内部的 error_handler 抛出异常，这里会捕获
-            logger.error(f"[WX859] Exception when calling api_client.send_video_message for {to_wxid}: {e}", exc_info=True)
-            return {"Success": False, "Msg": str(e)} # 返回包含错误信息的字典
+            logger.error(f"[WX859] Exception when sending video to {to_wxid}: {e}", exc_info=True)
+            return {"Success": False, "Msg": str(e)}
         finally:
-            # 清理 _prepare_video_and_thumb 创建的临时文件
+            # 清理临时文件
             if os.path.exists(video_path):
                 try:
                     os.remove(video_path)
                     logger.debug(f"[WX859] Cleaned up temp video file: {video_path}")
                 except Exception as e_clean:
                     logger.warning(f"[WX859] Failed to clean up temp video file {video_path}: {e_clean}")
-            if thumb_path and os.path.exists(thumb_path): # 只有当 thumb_path 不是 None 且实际存在时才尝试删除
+            if thumb_path and os.path.exists(thumb_path):
                 try:
                     os.remove(thumb_path)
                     logger.debug(f"[WX859] Cleaned up temp thumb file: {thumb_path}")
                 except Exception as e_clean:
-                    logger.warning(f"[WX859] Failed to clean up temp thumb file {thumb_path}: {e_clean}")
 
+                    logger.warning(f"[WX859] Failed to clean up temp thumb file {thumb_path}: {e_clean}")
     def send(self, reply: Reply, context: Context):
         """发送消息"""
         # 获取接收者ID
