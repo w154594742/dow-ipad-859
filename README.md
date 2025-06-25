@@ -75,8 +75,9 @@
 
 ```bash
 # 确保Python 3.8+环境，建议使用Python 3.11以上版本
+cd root
 git clone https://github.com/Lingyuzhou111/dow-ipad-859.git
-cd dow-ipad-859
+cd root/dow-ipad-859
 ```
 
 ### 2. 安装依赖
