@@ -15,6 +15,10 @@
 - **高稳定性**: 基于成熟的WX859协议，连接稳定，功能丰富
 
 ### 核心配置说明
+```bash
+在wx859_device_info.json中配置登录账号的wxid
+(其他两样不用管，会自动生成)
+```
 
 复制`config-template.json`为`config.json`，并修改关键配置，支持dify、coze、qwen、openai、siliconflow模型等自定义LLM选项：
 
