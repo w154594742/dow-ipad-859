@@ -108,6 +108,7 @@ pip install -r requirements-optional.txt
 4. 等待服务完全启动后使用 `python3 app.py` 启动主程序
 
 5.保活机制(不懂原理的可以问问deepseek)：
+sudo yum install tmux -y                   # 安装 tmux（若未安装）
 tmux kill-session -t dify                  # 杀掉tmux旧进程      
 tmux new -s dify                           # 启动tmux新进程                 
 ./scripts/wx859_start.sh                   # 后台运行脚本           
