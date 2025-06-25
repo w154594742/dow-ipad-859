@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Union
 
 import aiohttp
-import pysilk
 from loguru import logger
 from pydub import AudioSegment
 from pymediainfo import MediaInfo
