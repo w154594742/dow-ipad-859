@@ -4,7 +4,12 @@ import os
 from typing import Union
 
 import aiohttp
-import pysilk
+try:
+    import pysilk
+    PYSILK_AVAILABLE = True
+except ImportError:
+    pysilk = None
+    PYSILK_AVAILABLE = False
 from pydub import AudioSegment
 from loguru import logger
 
