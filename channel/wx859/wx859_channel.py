@@ -1548,7 +1548,7 @@ class WX859Channel(ChatChannel):
                                 break
                 
                 cmsg = WX859Message(msg, is_group)
-                logger.debug(f"[WX859] 处理消息: {getattr(cmsg, 'ctype', 'Unknown')} - {getattr(cmsg, 'content', 'Unknown')[:50]}")
+                logger.debug(f"[WX859] 处理消息: {getattr(cmsg, 'ctype', 'Unknown')} - {getattr(cmsg, 'content', 'Unknown')[:2000]}")
                 
                 if self._should_filter_this_message(cmsg):
                     logger.debug(f"[WX859] 消息被过滤: {getattr(cmsg, 'sender_wxid', 'Unknown')}")
@@ -2096,21 +2096,6 @@ class WX859Channel(ChatChannel):
                 cmsg.content = split_content[1]
                 sender_extracted = True
                 logger.debug(f"[WX859] 群聊发送者提取(方法1): {cmsg.sender_wxid}")
-            
-            # 方法2: 尝试解析简单的格式 "wxid:消息内容"（启用这个方法）
-            # 但是要避免对已经处理过的SHARING类型消息重复处理
-#           if not sender_extracted and cmsg.ctype != ContextType.SHARING:
-#               split_content = cmsg.content.split(":", 1)
-#               if len(split_content) > 1 and split_content[0] and not split_content[0].startswith("<"):
-                    # 额外检查：确保第一部分看起来像wxid而不是URL协议
-#                   potential_wxid = split_content[0]
-#                   if not potential_wxid.startswith(("http", "https", "ftp", "file")):
-#                       cmsg.sender_wxid = potential_wxid
-#                       cmsg.content = split_content[1]
-#                       sender_extracted = True
-#                       logger.debug(f"[WX859] 群聊发送者提取(方法2): {cmsg.sender_wxid}")
-#                   else:
-#                       logger.debug(f"[WX859] 跳过方法2处理，检测到URL协议: {potential_wxid}")
             
             # 方法3: 尝试从回复XML中提取
             if not sender_extracted and cmsg.content and cmsg.content.startswith("<"):
@@ -5537,6 +5522,19 @@ class WX859Channel(ChatChannel):
                 return
             if not xml_content.strip():
                 logger.error("[WX859] send app message failed: content is empty string")
+                return
+            
+            # 检查是否是MessageTail插件处理过的消息，如果是则直接发送原始XML
+            if hasattr(reply, '_messagetail_processed') and reply._messagetail_processed:
+                logger.info("[WX859] 检测到MessageTail插件标记，跳过XML解析直接发送")
+                # MessageTail插件已经生成了完整的XML，直接使用SendApp发送
+                # 强制设置app_type为5（图片类型），避免解析XML中的type标签
+                app_type = 5
+                result = loop.run_until_complete(self._send_app_xml(receiver, xml_content, app_type))
+                if result and isinstance(result, dict) and result.get("Success", False):
+                    logger.info(f"[WX859] MessageTail图片消息发送成功: 接收者: {receiver}, Type: {app_type}")
+                else:
+                    logger.warning(f"[WX859] MessageTail图片消息发送失败: 接收者: {receiver}, Type: {app_type}, 结果: {result}")
                 return
             
             # Extract app_type from XML content
