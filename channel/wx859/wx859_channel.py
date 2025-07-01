@@ -4580,6 +4580,39 @@ class WX859Channel(ChatChannel):
                                                     logger.warning(f"[{self.name}] Referenced file in msg {cmsg.msg_id} has no attachid, cannot look up in cache.")
                                                 if not (hasattr(self, 'file_cache_dir') and self.file_cache_dir):
                                                     logger.error(f"[{self.name}] File cache directory not configured. Cannot look up referenced file for msg {cmsg.msg_id}")
+                                    # 处理微信公众号文章引用 (inner appmsg type=5)
+                                    elif inner_type == "5":
+                                        article_url = inner_appmsg.findtext("url")
+                                        article_title = inner_appmsg.findtext("title")
+                                        article_des = inner_appmsg.findtext("des")
+                                        
+                                        if article_url and title and displayname:
+                                            # 修复URL协议处理逻辑
+                                            if not article_url.startswith("http"):
+                                                if article_url.startswith("//"):
+                                                    article_url = "https:" + article_url
+                                                else:
+                                                    article_url = "https://" + article_url
+                                            
+                                            # 构建引用微信公众号文章的提示信息
+                                            # 将用户指令放在最前面，便于插件识别
+                                            prompt = (
+                                                f"{title}\n"
+                                                f"标题：{article_title}\n"
+                                                f"描述：{article_des}\n"
+                                                f"链接：{article_url}\n"
+                                                f"发送者：\"{displayname}\""
+                                            )
+                                            
+                                            cmsg.content = prompt
+                                            cmsg.is_processed_text_quote = True
+                                            cmsg.ctype = ContextType.TEXT
+                                            
+                                            # 保存原始XML内容，供豆包插件使用
+                                            cmsg.original_xml_content = xml_content
+                                            
+                                            logger.info(f"[{self.name}] Processed WeChat article quote msg {cmsg.msg_id}. Article: {article_title}, URL: {article_url[:100]}...")
+                                            return
                                     
                                     # 其他类型的type=49引用消息
                                     else:
