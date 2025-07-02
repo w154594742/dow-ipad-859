@@ -134,6 +134,9 @@ nohup python3 app.py & tail -f nohup.out   # 挂载运行app.py进程
 - 检查Redis是否运行
 - 检查端口是否被占用
 - 检查授权码是否过期
+- 检查协议启动文件大小是否正常，如只有几KB请手动下载
+  ![微信图片_2025-07-02_214250_574](https://github.com/user-attachments/assets/3c38d2ed-1cd6-47aa-8b1a-8923df382503)
+  ![微信图片_2025-07-02_214323_904](https://github.com/user-attachments/assets/6b0f6972-743f-4a62-a987-1aa7aa8b0840)
 
 ### 登录问题
 - 确保网络稳定
