@@ -157,6 +157,7 @@ nohup python3 app.py & tail -f nohup.out   # 挂载运行app.py进程
 ### 交流群
 
 欢迎进入交流群进行相互讨论学习
-![微信图片_20250701225332_2](https://github.com/user-attachments/assets/8da97bfb-a241-4d3d-aada-98d4cacb530e)
+![微信图片_2025-07-17_154702_656](https://github.com/user-attachments/assets/0e220fe8-60b6-40bb-a323-d679a0508169)
+
 
 
