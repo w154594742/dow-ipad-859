@@ -154,6 +154,9 @@ nohup python3 app.py & tail -f nohup.out   # 挂载运行app.py进程
 - 授权码过期需联系协议作者
 - 新设备第一次登录自动生成缘分(授权)码 ，可免费体验15天
 
+### 详细教程
+https://rq4rfacax27.feishu.cn/wiki/ULM8waMdEiVfw3kmyS4cixIBnEh?from=from_copylink
+
 ### 交流群
 
 欢迎进入交流群进行相互讨论学习
