@@ -14,6 +14,11 @@ def create_bot(bot_type):
     # 获取当前配置的模型
     model = conf().get("model")
     
+    # 如果模型是 qianfan，使用 QianfanBot
+    if model == "qianfan" or bot_type == const.QIANFAN:
+        from bot.qianfan.qianfan_bot import QianfanBot
+        return QianfanBot()
+        
     # 如果模型是 SiliconFlow 系列模型，使用 SiliconFlowBot
     if model in [
         const.DEEPSEEK_V3,
@@ -21,8 +26,10 @@ def create_bot(bot_type):
         const.GLM_4_9B,
         const.GLM_Z1_9B,
         const.GLM_Z1_R_32B,
-        const.QWEN_2_7B,
-        const.MiniMax_M1_80K
+        const.QWEN3_2507,
+        const.MiniMax_M1_80K,
+        const.Hunyuan_A13B,
+        const.ERNIE_45_300B
     ]:
         from bot.siliconflow.siliconflow_bot import SiliconFlowBot
         return SiliconFlowBot()
@@ -38,6 +45,7 @@ def create_bot(bot_type):
     # 如果模型是 ZhipuAI 系列模型，使用 ZhipuAIBot
     if model in [
         const.GLM_4_FLASH,
+        const.GLM_45_FLASH,
         const.GLM_4_AIR,
         const.GLM_4_AIR_0414,
         const.GLM_4_PLUS,
@@ -52,6 +60,8 @@ def create_bot(bot_type):
         const.QWEN_PLUS,
         const.QWEN_MAX,
         const.QWEN_TURBO,
+        const.QWEN3_THINKING_2507,
+        const.QWEN3_INSTRUCT_2507,
         const.QWEN3_235B,
         const.QWEN3_32B,
         const.QWEN3_14B,
@@ -74,6 +84,7 @@ def create_bot(bot_type):
 
     # 如果模型是 OpenAI 系列模型，使用 OpenAIBot
     if model in [
+        const.O1,
         const.O1_MINI,
         const.GPT_41,
         const.GPT_41_MINI,
