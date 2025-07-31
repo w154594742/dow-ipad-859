@@ -6,10 +6,11 @@
 
 ### 更新日志
 - **更新日期** (2025-07-31)
-- **更新内容** 新增支持百度千帆的智能体，功能与coze类似，原生支持百度搜索、百度百科、图片生成等组件；
-只需在dow-ipad-859/bot/qianfan目录下上传最新的qianfan_bot.py等核心文件；
-同时需更新文件：const.py、config.py、bot_factory.py这三个文件以支持模型切换；
-然后在全局config.json文件中增加"qianfan_api_base"、"qianfan_app_id"、"qianfan_api_key"等参数配置即可——使用方法：#model qianfan
+- **更新内容**
+-新增支持百度千帆的智能体，功能与coze类似，原生支持百度搜索、百度百科、图片生成等组件；
+-只需在dow-ipad-859/bot/qianfan目录下上传最新的qianfan_bot.py等核心文件；
+-同时需更新文件：const.py、config.py、bot_factory.py这三个文件以支持模型切换；
+-然后在全局config.json文件中增加"qianfan_api_base"、"qianfan_app_id"、"qianfan_api_key"等参数配置即可——使用方法：#model qianfan
 
 ### 功能特性
 
