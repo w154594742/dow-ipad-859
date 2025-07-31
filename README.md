@@ -55,6 +55,9 @@
   "coze_api_base": "https://api.coze.cn/open_api/v2",
   "coze_api_key": "",                            # 选填
   "coze_bot_id": "",                             # 选填
+  "qianfan_api_base": "https://qianfan.baidubce.com/v2",
+  "qianfan_app_id": "",                          # 新增千帆智能体，需自行配置相关token
+  "qianfan_api_key": "",                         # 新增千帆智能体，需自行配置相关token
   "dashscope_api_key": "",                       # 选填
   "deepseek_api_base": "https://api.deepseek.com/v1",
   "deepseek_api_key": "",                        # 选填
