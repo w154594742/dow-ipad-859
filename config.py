@@ -133,6 +133,10 @@ available_setting = {
     "coze_api_key": "xxx",
     "coze_bot_id": "xxx",
     "coze_return_show_img": "false",
+    # 千帆配置
+    "qianfan_api_base": "https://qianfan.baidubce.com/v2",  # 百度千帆API基础URL
+    "qianfan_app_id": "",  # 千帆应用ID
+    "qianfan_api_key": "",  # 千帆API密钥    
     # wework的通用配置
     "wework_smart": True,  # 配置wework是否使用已登录的企业微信，False为多开
     # 语音设置
