@@ -1480,6 +1480,15 @@ class WX859Channel(ChatChannel):
                                             await self._process_ws_messages([message_content])
                                         else:
                                             logger.debug("[WX859] WebSocket收到空的 'data' 字段")
+                                    # 检查是否是new_message格式 (新增支持)
+                                    elif data.get("type") == "new_message" and "data" in data:
+                                        message_content = data.get("data")
+                                        if message_content:
+                                            # 将单个消息放入列表中以兼容处理函数
+                                            logger.info(f"[WX859] WebSocket收到 1 条新消息 (type: new_message)")
+                                            await self._process_ws_messages([message_content])
+                                        else:
+                                            logger.debug("[WX859] WebSocket收到空的 'data' 字段")
                                     # 检查是否是旧格式的 new_msg 事件 (为了兼容性)
                                     elif data.get("Event") == "new_msg" and "Data" in data:
                                         messages = data.get("Data", [])
@@ -6605,7 +6614,8 @@ class WX859Channel(ChatChannel):
 
                 # 检查插件是否阻止了消息 或 清空了 context
                 if e_context.is_pass() or context is None:
-                    logger.info(f"[WX859] Event ON_RECEIVE_MESSAGE breaked or context is None by plugin {e_context.get('breaked_by', 'N/A')}. Returning early.")
+                    breaked_by = getattr(e_context, 'breaked_by', 'N/A') if hasattr(e_context, 'breaked_by') else 'N/A'
+                    logger.info(f"[WX859] Event ON_RECEIVE_MESSAGE breaked or context is None by plugin {breaked_by}. Returning early.")
                     return context # 返回 None 或被插件修改的 context
             except Exception as plugin_e:
                 logger.error(f"[WX859] Error during ON_RECEIVE_MESSAGE event processing: {plugin_e}", exc_info=True)
