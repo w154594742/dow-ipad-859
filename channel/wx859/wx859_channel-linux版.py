@@ -5661,8 +5661,8 @@ class WX859Channel(ChatChannel):
             
             # Correctly create temporary directory for ffmpeg output
             base_tmp_root = TmpDir().path() # e.g., ./tmp/
-            voice_subdir_name = "wx859_voice"
-            voice_tmp_dir = os.path.join(base_tmp_root, voice_subdir_name) # e.g., ./tmp/wx859_voice
+            voice_subdir_name = "wx859_voice_cache"
+            voice_tmp_dir = os.path.join(base_tmp_root, voice_subdir_name) # e.g., ./tmp/wx859_voice_cache
             os.makedirs(voice_tmp_dir, exist_ok=True)
             processed_voice_path = os.path.join(voice_tmp_dir, f"ffmpeg_processed_{os.path.basename(original_voice_file_path)}")
             
