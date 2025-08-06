@@ -174,7 +174,8 @@ https://rq4rfacax27.feishu.cn/wiki/ULM8waMdEiVfw3kmyS4cixIBnEh?from=from_copylin
 
 欢迎进入交流群共同讨论学习，若群二维码过期可以加我个微备注“BOT”拉你进群
 ![微信图片_2025-08-07_035500_149](https://github.com/user-attachments/assets/815da189-0038-49eb-b4a5-503fe4d60401)
-![微信图片_2025-08-07_035513_597](https://github.com/user-attachments/assets/b8e59df8-ff89-4e7b-8c3c-838c8c4c2174)
+![0d9634a39fb17e2b0d2119f89249640f](https://github.com/user-attachments/assets/69083353-7b59-44ca-86e9-5f6e98ded3fd)
+
 
 
 
