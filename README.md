@@ -164,8 +164,8 @@ nohup python3 app.py & tail -f nohup.out   # 挂载运行app.py进程
 
 ### 特别声明
 - 本项目框架代码开源，但协议本身并未开源，由DPbot作者提供
+- 新设备第一次登录自动生成缘分(授权)码 ，可免费体验30天
 - 授权码过期需联系协议作者
-- 新设备第一次登录自动生成缘分(授权)码 ，可免费体验15天
 
 ### 详细教程
 https://rq4rfacax27.feishu.cn/wiki/ULM8waMdEiVfw3kmyS4cixIBnEh?from=from_copylink
@@ -173,7 +173,7 @@ https://rq4rfacax27.feishu.cn/wiki/ULM8waMdEiVfw3kmyS4cixIBnEh?from=from_copylin
 ### 交流群
 
 欢迎进入交流群共同讨论学习，若群二维码过期可以加我个微备注“BOT”拉你进群
-![微信图片_2025-08-07_035500_149](https://github.com/user-attachments/assets/815da189-0038-49eb-b4a5-503fe4d60401)
+![8ef46463c0871be01e51a3a99848b7ed](https://github.com/user-attachments/assets/e88ba6ca-9622-4144-aa50-417597a11bdf)
 ![0d9634a39fb17e2b0d2119f89249640f](https://github.com/user-attachments/assets/69083353-7b59-44ca-86e9-5f6e98ded3fd)
 
 
