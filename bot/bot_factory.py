@@ -26,7 +26,6 @@ def create_bot(bot_type):
         const.GLM_4_9B,
         const.GLM_Z1_9B,
         const.GLM_Z1_R_32B,
-        const.QWEN3_2507,
         const.MiniMax_M1_80K,
         const.Hunyuan_A13B,
         const.ERNIE_45_300B
@@ -133,6 +132,10 @@ def create_bot(bot_type):
     elif bot_type == const.MOONSHOT:
         from bot.moonshot.moonshot_bot import MoonshotBot
         return MoonshotBot()
+
+    elif bot_type == const.MODELSCOPE:
+        from bot.modelscope.modelscope_bot import ModelScopeBot
+        return ModelScopeBot()
 
     elif bot_type == const.GEMINI:
         from bot.gemini.google_gemini_bot import GoogleGeminiBot
