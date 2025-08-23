@@ -10,7 +10,15 @@
 新增支持百度千帆的智能体，功能与coze类似，原生支持百度搜索、百度百科、图片生成等组件；
 只需在dow-ipad-859/bot/qianfan目录下上传最新的qianfan_bot.py等核心文件；
 同时需更新文件：const.py、config.py、bot_factory.py这三个文件以支持模型切换；
-然后在全局config.json文件中增加"qianfan_api_base"、"qianfan_app_id"、"qianfan_api_key"等参数配置即可——使用方法：#model qianfan
+然后在全局config.json文件中增加"qianfan_api_base"、"qianfan_app_id"、"qianfan_api_key"等参数配置即可
+使用方法：#model qianfan
+(想要使用以上切换指令需同步更新godcmd插件目录下的available_models.json文件)
+- **2025-08-23更新内容** 
+新增支持魔搭平台的推理API，如最新的DeepSeek-V3.1/Kimi-K2-Instruct/GLM-4.5等开源模型，每天可免费对话2000次；
+需更新文件：const.py、config.py、bridge.py、bot_factory.py、modelscope_bot.py这五个文件以支持模型切换；
+然后在全局config.json文件中增加"modelscope_api_base"、"modelscope_model"、"modelscope_api_key"等参数配置即可
+使用方法：#model deepseek-ai/DeepSeek-V3.1、#model moonshotai/Kimi-K2-Instruct、#model ZhipuAI/GLM-4.5
+(想要使用以上切换指令需同步更新godcmd插件目录下的available_models.json文件)
 ```
 - **更新示例**
 <img width="839" height="639" alt="image" src="https://github.com/user-attachments/assets/6ee63a30-13d9-47e0-b7b1-c40d81db774e" />
