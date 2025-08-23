@@ -36,15 +36,15 @@ TTS_1_HD = "tts-1-hd"
 # dashscope models
 QWEN_PLUS = "qwen-plus"
 QWEN_MAX = "qwen-max"
+QWEN_FLASH = "qwen-flash"
 QWEN_TURBO = "qwen-turbo-2025-04-28"
-QWEN3_235B = "qwen3-235b-a22b"
 QWEN3_THINKING_2507 = "qwen3-235b-a22b-thinking-2507"
 QWEN3_INSTRUCT_2507 = "qwen3-235b-a22b-instruct-2507"
-QWEN3_32B = "qwen3-32b"
+QWEN3_32B = "qwen3-30b-a3b-instruct-2507"
 QWEN3_14B = "qwen3-14b"
-QWQ_PLUS = "qwq-plus"
 QWEN_CHAT = "deepseek-v3"
 QWEN_R1 = "deepseek-r1"
+QWEN_K2 = "Moonshot-Kimi-K2-Instruct"
 
 # zhipuai models
 GLM_4_FLASH = "glm-4-flash-250414"
@@ -61,10 +61,15 @@ DEEPSEEK_R1 = "deepseek-ai/DeepSeek-R1"
 GLM_4_9B = "THUDM/GLM-4-9B-0414"
 GLM_Z1_9B = "THUDM/GLM-Z1-9B-0414"
 GLM_Z1_R_32B = "THUDM/GLM-Z1-Rumination-32B-0414"
-QWEN3_2507 = "Qwen/Qwen3-235B-A22B-Instruct-2507"
 MiniMax_M1_80K = "MiniMaxAI/MiniMax-M1-80k"
 Hunyuan_A13B = "tencent/Hunyuan-A13B-Instruct"
 ERNIE_45_300B = "baidu/ERNIE-4.5-300B-A47B"
+
+# modelscope models
+QWEN3_235B = "Qwen/Qwen3-235B-A22B-Instruct-2507"
+KIMI_K2 = "moonshotai/Kimi-K2-Instruct"
+DS_V31 = "deepseek-ai/DeepSeek-V3.1"
+GLM_45 = "ZhipuAI/GLM-4.5"
 
 # deepseek models
 DEEPSEEK_CHAT = "deepseek-chat"
@@ -82,9 +87,10 @@ DIFY_AGENT = "agent"
 DIFY_WORKFLOW = "workflow"
 
 MODEL_LIST = [OPEN_AI, O1, O1_MINI, GPT_41, GPT_41_MINI, GPT_41_NANO, GPT_4O_MINI, GPT_4O_MINI_SEARCH,
-              QWEN_DASHSCOPE, QWEN_PLUS, QWEN_MAX, QWEN_TURBO, QWEN3_THINKING_2507, QWEN3_INSTRUCT_2507, QWEN3_235B, QWEN3_32B, QWEN3_14B, QWQ_PLUS, QWEN_CHAT, QWEN_R1,
+              QWEN_DASHSCOPE, QWEN_PLUS, QWEN_MAX, QWEN_TURBO, QWEN3_THINKING_2507, QWEN3_INSTRUCT_2507, QWEN3_32B, QWEN3_14B, QWEN_FLASH, QWEN_CHAT, QWEN_R1, QWEN_K2,
               ZHIPU_AI, GLM_4_FLASH, GLM_45_FLASH, GLM_4_AIR, GLM_4_AIR_0414, GLM_4_PLUS, GLM_Z1_FLASH, GLM_Z1_AIR, 
-              SILICONFLOW, DEEPSEEK_V3, DEEPSEEK_R1, GLM_4_9B, GLM_Z1_9B, GLM_Z1_R_32B, QWEN3_2507, MiniMax_M1_80K, Hunyuan_A13B, ERNIE_45_300B,
+              SILICONFLOW, DEEPSEEK_V3, DEEPSEEK_R1, GLM_4_9B, GLM_Z1_9B, GLM_Z1_R_32B, MiniMax_M1_80K, Hunyuan_A13B, ERNIE_45_300B,
+              MODELSCOPE, QWEN3_235B, KIMI_K2, DS_V31, GLM_45,
               COZE, QIANFAN, 
               DIFY, DIFY_CHATFLOW, DIFY_CHATBOT, DIFY_AGENT, DIFY_WORKFLOW,
               GEMINI, GEMINI_15_FLASH, GEMINI_15_PRO, GEMINI_20_FLASH_EXP,
