@@ -42,6 +42,9 @@
   "single_chat_prefix": [""],
   "single_chat_reply_prefix": "",
   "temperature": 0.5,
+  "modelscope_api_base": "https://api-inference.modelscope.cn/v1",
+  "modelscope_api_key": "",
+  "modelscope_model": "deepseek-ai/DeepSeek-V3.1",
   "zhipu_ai_api_base": "https://open.bigmodel.cn/api/paas/v4",
   "zhipu_ai_api_key": "",
   "zhipuai_model": "glm-4-flash-250414"
