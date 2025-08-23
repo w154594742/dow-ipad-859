@@ -35,7 +35,11 @@ available_setting = {
     # Siliconflow API配置    
     "siliconflow_api_key": "", # 硅基流动 API key
     "siliconflow_api_base": "https://api.siliconflow.cn/v1/chat/completions",
-    "siliconflow_model": "Qwen/Qwen2.5-7B-Instruct",  # SiliconFlow 默认模型    
+    "siliconflow_model": "deepseek-ai/DeepSeek-V3.1",  # SiliconFlow 默认模型    
+    # Modelscope API配置    
+    "modelscope_api_key": "", # Modelscope API key
+    "modelscope_api_base": "https://api-inference.modelscope.cn/v1",  # Modelscope API基础地址
+    "modelscope_model": "deepseek-ai/DeepSeek-V3.1",  # Modelscope 默认模型   
 
     # wx859配置
     "wx859_api_host": "127.0.0.1",  # wx859 channel API host
