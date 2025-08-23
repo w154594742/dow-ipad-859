@@ -13,6 +13,9 @@
 使用方法：#model deepseek-ai/DeepSeek-V3.1、#model moonshotai/Kimi-K2-Instruct、#model ZhipuAI/GLM-4.5
 (想要使用以上切换指令需同步更新godcmd插件目录下的available_models.json文件)
 
+- **2025-08-23更新内容** 
+新增角色切换功能，可以在同一模型之下一键切换不同的系统提示词以应对不同对话需求
+
 - **2025-07-31更新内容** 
 新增支持百度千帆的智能体，功能与coze类似，原生支持百度搜索、百度百科、图片生成等组件；
 只需在dow-ipad-859/bot/qianfan目录下上传最新的qianfan_bot.py等核心文件；
@@ -22,6 +25,12 @@
 (想要使用以上切换指令需同步更新godcmd插件目录下的available_models.json文件)
 ```
 - **更新示例**
+- 2025-08-23
+<img width="840" height="609" alt="04cb981c-1a0f-42c9-9061-c09fa3072005" src="https://github.com/user-attachments/assets/a4c3b21e-34c7-437a-9180-0b7fc3725bbc" />
+<img width="960" height="804" alt="image" src="https://github.com/user-attachments/assets/4f4f4de2-40f2-4083-9848-ec1e045d20dc" />
+<img width="960" height="1014" alt="image" src="https://github.com/user-attachments/assets/9aadf7e0-0425-4acc-9310-6f728ebe0ede" />
+<img width="959" height="880" alt="image" src="https://github.com/user-attachments/assets/1e955441-90c7-4cc3-a69c-475a12d7db6a" />
+
 - 2025-07-31
 <img width="839" height="639" alt="image" src="https://github.com/user-attachments/assets/6ee63a30-13d9-47e0-b7b1-c40d81db774e" />
 <img width="839" height="590" alt="583e558a-46ff-4755-b9c7-f023d9531a80" src="https://github.com/user-attachments/assets/c3590f38-e642-4a72-9c33-5fcd9a756aea" />
