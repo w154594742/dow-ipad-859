@@ -26,10 +26,8 @@
 ```
 - **更新示例**
 - 2025-08-23
-<img width="550" height="400" alt="04cb981c-1a0f-42c9-9061-c09fa3072005" src="https://github.com/user-attachments/assets/a4c3b21e-34c7-437a-9180-0b7fc3725bbc" />
-<img width="480" height="400" alt="image" src="https://github.com/user-attachments/assets/4f4f4de2-40f2-4083-9848-ec1e045d20dc" />
-<img width="480" height="507" alt="image" src="https://github.com/user-attachments/assets/9aadf7e0-0425-4acc-9310-6f728ebe0ede" />
-<img width="480" height="440" alt="image" src="https://github.com/user-attachments/assets/1e955441-90c7-4cc3-a69c-475a12d7db6a" />
+<img width="420" height="305" alt="04cb981c-1a0f-42c9-9061-c09fa3072005" src="https://github.com/user-attachments/assets/a4c3b21e-34c7-437a-9180-0b7fc3725bbc" />
+<img width="366" height="305" alt="image" src="https://github.com/user-attachments/assets/4f4f4de2-40f2-4083-9848-ec1e045d20dc" />
 
 - 2025-07-31
 <img width="839" height="639" alt="image" src="https://github.com/user-attachments/assets/6ee63a30-13d9-47e0-b7b1-c40d81db774e" />
