@@ -28,6 +28,19 @@ COMMANDS = {
         "args": ["口令"],
         "desc": "管理员认证",
     },
+    "role": {
+        "alias": ["role", "角色", "角色切换"],
+        "args": ["角色名称"],
+        "desc": "切换机器人角色设定，使用#role 角色名称 或 #人设 角色名称",
+    },
+    "rolelist": {
+        "alias": ["rolelist", "角色列表", "人设列表"],
+        "desc": "显示按序号排列的可用角色列表",
+    },
+    "reset_role": {
+        "alias": ["reset_role", "重置角色", "默认角色"],
+        "desc": "重置为默认角色设定（来自config.json）",
+    },
     "model": {
         "alias": ["model", "模型"],
         "desc": "查看和设置全局模型",
@@ -270,6 +283,22 @@ class Godcmd(Plugin):
         self.admin_users = gconf.get("admin_users", [])
         global_config["admin_users"] = self.admin_users # Ensure admin list is in global_config
 
+        # Load role map from role_map.json
+        role_map_path = os.path.join(os.path.dirname(__file__), "role_map.json")
+        try:
+            with open(role_map_path, "r", encoding="utf-8") as f:
+                self.role_map = json.load(f)
+            logger.info("[Godcmd] Role map loaded from %s", role_map_path)
+        except FileNotFoundError:
+            self.role_map = {}
+            logger.warning("[Godcmd] Role map file not found at %s. Role switching will not be available.", role_map_path)
+        except json.JSONDecodeError:
+            self.role_map = {}
+            logger.error("[Godcmd] Error decoding role map file %s. Role switching will not be available.", role_map_path)
+        except Exception as e:
+            self.role_map = {}
+            logger.error("[Godcmd] Error loading role map file %s: %s. Role switching will not be available.", role_map_path, e, exc_info=True)
+
         custom_commands = conf().get("clear_memory_commands", [])
         for custom_command in custom_commands:
             if custom_command and custom_command.startswith("#"):
@@ -343,6 +372,75 @@ class Godcmd(Plugin):
                             ok, result = False, "插件不存在或未启用"
                 elif canonical_cmd == "auth":
                     ok, result = self.authenticate(user, args, isadmin, isgroup)
+                elif canonical_cmd == "role":
+                    if len(args) == 0:
+                        # 显示当前角色和可用角色列表
+                        current_role = self.get_current_role(session_id)
+                        available_roles = list(self.role_map.get("character_desc", {}).keys())
+                        
+                        if current_role:
+                            status_text = f"当前角色：{current_role}\n\n"
+                        else:
+                            status_text = "当前角色：默认角色（来自config.json）\n\n"
+                        
+                        if available_roles:
+                            role_list = "\n".join([f"- {role}" for role in available_roles])
+                            ok, result = True, f"{status_text}可用角色列表：\n{role_list}\n\n使用方法：#role 角色名称"
+                        else:
+                            ok, result = False, f"{status_text}没有可用的角色设定"
+                    elif len(args) == 1:
+                        role_name = args[0]
+                        # 检查角色是否存在
+                        if role_name in self.role_map.get("character_desc", {}):
+                            # 获取角色设定
+                            character_desc = self.role_map["character_desc"][role_name]
+                            
+                            # 更新当前会话的系统提示词
+                            try:
+                                # 获取当前会话并更新系统提示词
+                                session = bot.sessions.build_session(session_id, system_prompt=character_desc)
+                                ok, result = True, f"角色已切换为: {role_name}"
+                                
+                                # 记录日志
+                                logger.info(f"[Godcmd] User {user} switched role to '{role_name}' in session {session_id}")
+                                
+                            except Exception as e:
+                                logger.error(f"[Godcmd] Error updating session system prompt: {e}")
+                                ok, result = False, f"角色切换失败: {str(e)}"
+                        else:
+                            # 显示可用角色列表作为提示
+                            available_roles = list(self.role_map.get("character_desc", {}).keys())
+                            if available_roles:
+                                role_list = "\n".join([f"- {role}" for role in available_roles])
+                                ok, result = False, f"角色 '{role_name}' 不存在\n\n可用角色列表：\n{role_list}"
+                            else:
+                                ok, result = False, "没有可用的角色设定"
+                    else:
+                        ok, result = False, "请只提供一个角色名称"
+                elif canonical_cmd == "rolelist":
+                    available_roles = list(self.role_map.get("character_desc", {}).keys())
+                    if available_roles:
+                        role_list_text = "可用角色列表：\n"
+                        for i, role_name in enumerate(available_roles, 1):
+                            role_list_text += f"{i}. {role_name}\n"
+                        ok, result = True, role_list_text.strip()
+                    else:
+                        ok, result = False, "没有可用的角色设定"
+                elif canonical_cmd == "reset_role":
+                    try:
+                        # 获取默认角色设定（来自config.json）
+                        default_character_desc = conf().get("character_desc", "")
+                        
+                        # 获取当前会话并重置系统提示词
+                        session = bot.sessions.build_session(session_id, system_prompt=default_character_desc)
+                        ok, result = True, "角色已重置为默认角色设定"
+                        
+                        # 记录日志
+                        logger.info(f"[Godcmd] User {user} reset role to default in session {session_id}")
+                        
+                    except Exception as e:
+                        logger.error(f"[Godcmd] Error resetting role to default: {e}")
+                        ok, result = False, f"角色重置失败: {str(e)}"
                 elif canonical_cmd == "model":
                     if not isadmin and not self.is_admin_in_group(e_context["context"]):
                         ok, result = False, "需要管理员权限执行"
@@ -586,8 +684,47 @@ class Godcmd(Plugin):
             return False, "认证失败"
 
     def get_help_text(self, isadmin=False, isgroup=False, **kwargs):
-        return get_help_text(isadmin, isgroup)
+        help_text = get_help_text(isadmin, isgroup)
+        
+        # 添加角色切换相关的帮助信息
+        if hasattr(self, 'role_map') and self.role_map.get("character_desc"):
+            help_text += "\n\n角色切换功能："
+            help_text += "\n#role - 显示当前角色和可用角色列表"
+            help_text += "\n#rolelist - 显示按序号排列的角色列表"
+            help_text += "\n#role 角色名称 - 切换到指定角色"
+            help_text += "\n#reset_role - 重置为默认角色设定"
+            
+            # 显示可用角色列表
+            available_roles = list(self.role_map["character_desc"].keys())
+            if available_roles:
+                help_text += f"\n\n可用角色：{', '.join(available_roles)}"
+        
+        return help_text
 
+    def get_current_role(self, session_id):
+        """
+        获取当前会话的角色设定
+        
+        Args:
+            session_id: 会话ID
+            
+        Returns:
+            str: 当前角色名称，如果没有设置则返回None
+        """
+        try:
+            # 获取当前会话
+            bot = Bridge().get_bot("chat")
+            if bot and hasattr(bot, 'sessions'):
+                session = bot.sessions.build_session(session_id)
+                if session and session.system_prompt:
+                    # 检查当前系统提示词是否匹配某个角色设定
+                    for role_name, character_desc in self.role_map.get("character_desc", {}).items():
+                        if session.system_prompt == character_desc:
+                            return role_name
+            return None
+        except Exception as e:
+            logger.error(f"[Godcmd] Error getting current role: {e}")
+            return None
 
     def is_admin_in_group(self, context):
         if context["isgroup"]:
