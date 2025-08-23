@@ -22,6 +22,7 @@
 (想要使用以上切换指令需同步更新godcmd插件目录下的available_models.json文件)
 ```
 - **更新示例**
+- 2025-07-31
 <img width="839" height="639" alt="image" src="https://github.com/user-attachments/assets/6ee63a30-13d9-47e0-b7b1-c40d81db774e" />
 <img width="839" height="590" alt="583e558a-46ff-4755-b9c7-f023d9531a80" src="https://github.com/user-attachments/assets/c3590f38-e642-4a72-9c33-5fcd9a756aea" />
    
