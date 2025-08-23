@@ -18,17 +18,26 @@ import requests
 class ModelScopeBot(Bot):
     def __init__(self):
         super().__init__()
-        self.sessions = SessionManager(ModelScopeSession, model=conf().get("model") or "Qwen/Qwen2.5-7B-Instruct")
-        model = conf().get("model") or "Qwen/Qwen2.5-7B-Instruct"
+        self.sessions = SessionManager(ModelScopeSession, model=conf().get("model") or "deepseek-ai/DeepSeek-V3.1")
+        model = conf().get("model") or "deepseek-ai/DeepSeek-V3.1"
         if model == "modelscope":
-            model = "Qwen/Qwen2.5-7B-Instruct"
+            model = "deepseek-ai/DeepSeek-V3.1"
         self.args = {
             "model": model,  # 对话模型的名称
             "temperature": conf().get("temperature", 0.3),  # 如果设置，值域须为 [0, 1] 我们推荐 0.3，以达到较合适的效果。
             "top_p": conf().get("top_p", 1.0),  # 使用默认值
         }
         self.api_key = conf().get("modelscope_api_key")
-        self.base_url = conf().get("modelscope_base_url", "https://api-inference.modelscope.cn/v1/chat/completions")
+        if not self.api_key:
+            logger.error("[MODELSCOPE_AI] modelscope_api_key not configured, please set it in config.json")
+        
+        # 获取API基础地址，构建完整的推理端点
+        api_base = conf().get("modelscope_api_base", "https://api-inference.modelscope.cn/v1")
+        if api_base.endswith("/"):
+            self.base_url = api_base + "chat/completions"
+        else:
+            self.base_url = api_base + "/chat/completions"
+        logger.info(f"[MODELSCOPE_AI] Using API base URL: {self.base_url}")
         """
         需要获取ModelScope支持API-inference的模型名称列表，请到魔搭社区官网模型中心查看 https://modelscope.cn/models?filter=inference_type&page=1。
         或者使用命令 curl https://api-inference.modelscope.cn/v1/models 对模型列表和ID进行获取。查看commend/const.py文件也可以获取模型列表。
@@ -122,35 +131,55 @@ class ModelScopeBot(Bot):
             )
 
             if res.status_code == 200:
-                response = res.json()
-                return {
-                    "total_tokens": response["usage"]["total_tokens"],
-                    "completion_tokens": response["usage"]["completion_tokens"],
-                    "content": response["choices"][0]["message"]["content"]
-                }
+                try:
+                    response = res.json()
+                    return {
+                        "total_tokens": response["usage"]["total_tokens"],
+                        "completion_tokens": response["usage"]["completion_tokens"],
+                        "content": response["choices"][0]["message"]["content"]
+                    }
+                except json.JSONDecodeError as e:
+                    logger.error(f"[MODELSCOPE_AI] Failed to parse JSON response: {e}, response text: {res.text}")
+                    return {"completion_tokens": 0, "content": "API响应格式错误，请检查配置"}
             else:
-                response = res.json()
-                if "errors" in response:
-                    error = response.get("errors")
-                elif "error" in response:
-                    error = response.get("error")
-                else:
-                    error = "Unknown error"
-                logger.error(f"[MODELSCOPE_AI] chat failed, status_code={res.status_code}, "
-                             f"msg={error.get('message')}, type={error.get('type')}")
+                # 记录响应状态和内容
+                logger.error(f"[MODELSCOPE_AI] API request failed, status_code={res.status_code}, response_text: {res.text}")
+                
+                try:
+                    response = res.json()
+                    if "errors" in response:
+                        error = response.get("errors")
+                    elif "error" in response:
+                        error = response.get("error")
+                    else:
+                        error = "Unknown error"
+                    logger.error(f"[MODELSCOPE_AI] chat failed, status_code={res.status_code}, "
+                                 f"msg={error.get('message')}, type={error.get('type')}")
+                except json.JSONDecodeError as e:
+                    logger.error(f"[MODELSCOPE_AI] Failed to parse error response JSON: {e}")
+                    # 如果无法解析JSON，尝试从响应文本中提取错误信息
+                    if "unauthorized" in res.text.lower() or "401" in res.text:
+                        error = {"message": "API Key无效或未授权", "type": "authentication_error"}
+                    elif "not found" in res.text.lower() or "404" in res.text:
+                        error = {"message": "API端点未找到", "type": "not_found"}
+                    else:
+                        error = {"message": f"HTTP {res.status_code} 错误", "type": "http_error"}
 
-                result = {"completion_tokens": 0, "content": "提问太快啦，请休息一下再问我吧"}
-                need_retry = False
-                if res.status_code >= 500:
+                # 根据错误类型设置相应的错误信息
+                if res.status_code == 401:
+                    result = {"completion_tokens": 0, "content": "授权失败，请检查ModelScope API Key是否正确"}
+                elif res.status_code == 404:
+                    result = {"completion_tokens": 0, "content": "API端点未找到，请检查ModelScope API地址配置"}
+                elif res.status_code == 429:
+                    result = {"completion_tokens": 0, "content": "请求过于频繁，请稍后再试"}
+                    need_retry = retry_count < 2
+                elif res.status_code >= 500:
+                    result = {"completion_tokens": 0, "content": "ModelScope服务器错误，请稍后再试"}
                     # server error, need retry
                     logger.warn(f"[MODELSCOPE_AI] do retry, times={retry_count}")
                     need_retry = retry_count < 2
-                elif res.status_code == 401:
-                    result["content"] = "授权失败，请检查API Key是否正确"
-                elif res.status_code == 429:
-                    result["content"] = "请求过于频繁，请稍后再试"
-                    need_retry = retry_count < 2
                 else:
+                    result = {"completion_tokens": 0, "content": f"ModelScope API请求失败 (HTTP {res.status_code})"}
                     need_retry = False
 
                 if need_retry:
