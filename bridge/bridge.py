@@ -49,19 +49,22 @@ class Bridge(object):
                 self.btype["chat"] = const.CLAUDEAI
             if model_type in [const.MOONSHOT, "moonshot-v1-8k", "moonshot-v1-32k", "moonshot-v1-128k"]:
                 self.btype["chat"] = const.MOONSHOT
+            # 检查是否为modelscope系列模型
+            if model_type in [const.MODELSCOPE, "modelscope"] or model_type in [const.QWEN3_235B, const.KIMI_K2, const.DS_V31, const.GLM_45]:
+                self.btype["chat"] = const.MODELSCOPE
 
             if model_type in ["abab6.5-chat"]:
                 self.btype["chat"] = const.MiniMax
 
             # Dashscope models
             if model_type in [const.QWEN_PLUS, const.QWEN_MAX, const.QWEN_TURBO, const.QWEN3_235B, 
-                            const.QWEN3_32B, const.QWEN3_14B, const.QWQ_PLUS, const.QWEN_CHAT, 
+                            const.QWEN3_32B, const.QWEN3_14B, const.QWEN_CHAT, 
                             const.QWEN_R1]:
                 self.btype["chat"] = const.QWEN_DASHSCOPE
 
             # Siliconflow models
             if model_type in [const.DEEPSEEK_V3, const.DEEPSEEK_R1, const.GLM_4_9B, const.GLM_Z1_9B, 
-                            const.GLM_Z1_R_32B, const.QWEN_2_7B]:
+                            const.GLM_Z1_R_32B, const.MiniMax_M1_80K, const.Hunyuan_A13B, const.ERNIE_45_300B]:
                 self.btype["chat"] = const.SILICONFLOW
 
             # Deepseek models
