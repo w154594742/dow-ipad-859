@@ -10,19 +10,25 @@
     "dashscope": [
         "qwen-plus",
         "qwen-max",
+        "qwen-flash",
         "qwen-turbo-2025-04-28",
+        "qwen3-235b-a22b-thinking-2507",
+        "qwen3-235b-a22b-instruct-2507",
+        "qwen3-30b-a3b-instruct-2507",
         "qwen3-235b-a22b",
-        "qwen3-32b",
         "qwen3-14b",
-        "qwq-plus",
         "deepseek-v3",
-        "deepseek-r1"
+        "deepseek-r1",
+        "Moonshot-Kimi-K2-Instruct"
         ],
     "zhipuai": [
         "glm-4-flash-250414",
+        "glm-4.5-flash",
+        "glm-4.5-air",
         "glm-z1-flash",
         "glm-4v-flash",
-        "glm-4-plus"
+        "glm-4-plus",
+        "glm-4-air"
         ],
     "deepseek": [
         "deepseek-chat",
@@ -34,7 +40,15 @@
         "THUDM/GLM-4-9B-0414",
         "THUDM/GLM-Z1-9B-0414",
         "THUDM/GLM-Z1-Rumination-32B-0414",
-        "Qwen/Qwen2.5-7B-Instruct"
+        "MiniMaxAI/MiniMax-M1-80k",
+        "tencent/Hunyuan-A13B-Instruct",
+        "baidu/ERNIE-4.5-300B-A47B"
+        ],
+    "modelscope": [
+        "Qwen/Qwen3-235B-A22B-Instruct-2507",
+        "moonshotai/Kimi-K2-Instruct",
+        "deepseek-ai/DeepSeek-V3.1",
+        "ZhipuAI/GLM-4.5"
         ],
     "dify": [
         "chatflow",
@@ -44,5 +58,8 @@
         ],
     "coze": [
         "coze"
+        ],
+    "baidu": [
+        "qianfan"
         ]
     }
